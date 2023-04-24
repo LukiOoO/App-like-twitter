@@ -15,8 +15,27 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+
+admin.site.site_header = 'App like twitter  Admin'
+admin.site.index_title = 'Admin'
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('c/', include('comments.urls')),
+    path('p_w/', include('posts_wall.urls')),
+    path('pv_m/', include('pv_messages.urls')),
+    path('t/', include('tags.urls')),
+    path('u/', include('users.urls')),
+    path('a_f_g-P_u/', include('app_for_getting_photo_url.urls')),
+    path('__debug__/', include('debug_toolbar.urls')),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL,
+                          document_root=settings.STATIC_ROOT)
