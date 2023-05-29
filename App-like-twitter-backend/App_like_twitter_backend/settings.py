@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 
@@ -27,6 +28,7 @@ SECRET_KEY = 'django-insecure-_mg4g5=g9fxz*r1%%6cwr^my)ft733g3djj7zg291wlp6*mjtk
 DEBUG = True
 
 ALLOWED_HOSTS = []
+BASE_URL = "http://127.0.0.1:8000"
 
 
 # Application definition
@@ -41,10 +43,10 @@ INSTALLED_APPS = [
     "debug_toolbar",
     'django_cleanup.apps.CleanupConfig',
     'rest_framework',
+    'djoser',
     'comments',
     'users',
     'posts_wall',
-    'pv_messages',
     'tags',
     'app_for_getting_photo_url',
 
@@ -103,6 +105,53 @@ DATABASES = {
     }
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+
+    ),
+}
+
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('JWT',),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    # "ACCESS_TOKEN_LIFETIME": timedelta(milliseconds=918000),
+    # 'REFRESH_TOKEN_LIFETIME': timedelta(milliseconds=918000),
+    # "ROTATE_REFRESH_TOKENS": True,
+    # "BLACKLIST_AFTER_ROTATION": True,
+
+}
+
+DJOSER = {
+
+    "USER_ID_FIELD": "nickname",
+    "LOGIN_FIELD": "email",
+    "ACTIVATION_URL": "s/activate/{uid}/{token}",
+
+    'PASSWORD_RESET_CONFIRM_URL': 'u/password/reset/confirm/{uid}/{token}',
+
+
+    'SERIALIZERS': {
+        'user_create': 'users.serializers.UserCreateSerializer',
+        'current_user': 'users.serializers.UserSerializer',
+        'resend_activation': 'sending.serializers.ResendActivationSerializer',
+        'token_create': 'sending.serializers.CustomTokenCreateSerializer',
+
+    },
+
+
+}
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'localhost'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_PORT = 2525
+DEFAULT_FROM_EMAIL = 'appLtt@site.com'
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -151,3 +200,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACL': lambda request: True
+}

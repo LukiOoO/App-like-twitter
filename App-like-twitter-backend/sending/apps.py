@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class PvMessagesConfig(AppConfig):
+class SendingConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'pv_messages'
+    name = 'sending'

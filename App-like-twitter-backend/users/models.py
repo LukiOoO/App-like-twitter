@@ -12,6 +12,7 @@ class UserManager(BaseUserManager):
         user = self.model(email=email, nickname=nickname, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
+        user.is_active = True
         return user
 
     def create_superuser(self, email, nickname, password):
@@ -21,6 +22,7 @@ class UserManager(BaseUserManager):
             password=password)
         user.staff = True
         user.admin = True
+        user.freeze_or_not = False
         user.save(using=self._db)
         return user
 
@@ -32,11 +34,15 @@ class User(AbstractBaseUser):
     nickname = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
     slug = models.SlugField()
+    avatar = models.ImageField(
+        blank=True, upload_to='users_avatars/', null=True)
     is_active = models.BooleanField(default=True)
     staff = models.BooleanField(default=False)
     admin = models.BooleanField(default=False)
     groups = models.ManyToManyField(
         Group, related_name='mathsite_users', blank=True)
+
+    freeze_or_not = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.nickname}'

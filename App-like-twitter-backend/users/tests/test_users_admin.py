@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 import pytest
 from django.contrib.admin.sites import AdminSite
 from mixer.backend.django import mixer
@@ -18,7 +17,8 @@ def user():
 
 def test_user_admin_should_have_correct_list_display(user_admin):
     assert user_admin.list_display == [
-        'email', 'nickname', 'is_staff', 'admin', 'is_active']
+        'email', 'nickname',
+        'is_staff', 'admin', 'is_active', 'avatar', 'freeze_or_not']
 
 
 def test_user_admin_should_have_correct_list_filter(user_admin):
@@ -30,7 +30,7 @@ def test_user_admin_should_have_correct_list_per_page(user_admin):
 
 
 def test_user_admin_should_have_correct_list_editable(user_admin):
-    assert user_admin.list_editable == ['is_active']
+    assert user_admin.list_editable == ['is_active', 'freeze_or_not']
 
 
 def test_user_admin_should_have_correct_ordering(user_admin):
@@ -44,8 +44,9 @@ def test_user_admin_should_have_correct_search_fields(user_admin):
 
 def test_user_admin_should_have_correct_fieldsets(user_admin):
     expected_fieldsets = (
-        (None, {'fields': ('email', 'nickname',  'slug', 'password')}),
+        (None, {'fields': ('email', 'nickname',  'slug',  'avatar')}),
         ('Permissions', {'fields': ('staff', 'groups')}),
+        ('Password', {'fields': ('password',)}),
     )
     assert user_admin.fieldsets == expected_fieldsets
 

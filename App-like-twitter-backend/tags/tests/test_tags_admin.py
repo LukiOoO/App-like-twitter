@@ -2,7 +2,6 @@ import pytest
 from django.contrib import admin
 from tags.models import Tags
 from tags.admin import TagsAdmin, TagsAdminForm
-from django.forms import ValidationError
 from users.models import User
 
 

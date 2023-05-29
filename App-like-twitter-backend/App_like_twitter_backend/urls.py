@@ -19,7 +19,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-
 admin.site.site_header = 'App like twitter  Admin'
 admin.site.index_title = 'Admin'
 
@@ -28,10 +27,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('c/', include('comments.urls')),
     path('p_w/', include('posts_wall.urls')),
-    path('pv_m/', include('pv_messages.urls')),
     path('t/', include('tags.urls')),
-    path('u/', include('users.urls')),
     path('a_f_g-P_u/', include('app_for_getting_photo_url.urls')),
+    path('s/', include('sending.urls')),
+    path('u/', include('users.urls')),
+    path('u/', include('djoser.urls')),
+    path('u/', include('djoser.urls.jwt')),
+
     path('__debug__/', include('debug_toolbar.urls')),
 ]
 if settings.DEBUG:
