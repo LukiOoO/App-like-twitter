@@ -11,6 +11,7 @@ class Tags(models.Model):
     def save(self, *args, **kwargs):
         if not self.tag.startswith('#'):
             self.tag = '#' + self.tag
+        self.tag = self.tag.upper()
 
         super().save(*args, **kwargs)
 
