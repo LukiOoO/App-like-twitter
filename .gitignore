@@ -1,5 +1,1 @@
 .vscode
-*.pyc
-/media/
-/static/
-general.log
