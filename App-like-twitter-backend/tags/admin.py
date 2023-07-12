@@ -1,9 +1,8 @@
-from django.contrib import admin
-from .models import Tags
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib import admin
-
+from django.contrib import admin
+from .models import Tags
 from .models import Tags
 
 
@@ -14,16 +13,13 @@ class TagsAdminForm(forms.ModelForm):
 
     def clean_tag(self):
         tag = self.cleaned_data.get('tag', '')
-
         if not tag.startswith('#'):
             tag = '#' + tag
-
         existing_tags = Tags.objects.filter(tag=tag)
         if self.instance.pk:
             existing_tags = existing_tags.exclude(pk=self.instance.pk)
         if existing_tags.exists():
             raise ValidationError('Tag with this name already exists.')
-
         return tag
 
 

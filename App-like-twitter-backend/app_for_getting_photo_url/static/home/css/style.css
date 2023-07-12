@@ -1,0 +1,20 @@
+body {
+  background-color: black;
+  color: white;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.txt {
+  display: table-cell;
+  width: 100vw;
+  height: 100vh;
+  padding: 10px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+img.logo {
+  height: 100vh;
+  width: 100vw;
+  opacity: 60%;
+}

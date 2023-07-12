@@ -1,5 +1,5 @@
-import pytest
 from django.contrib import admin
+import pytest
 from tags.models import Tags
 from tags.admin import TagsAdmin, TagsAdminForm
 from users.models import User

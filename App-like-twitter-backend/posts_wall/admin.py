@@ -2,8 +2,6 @@ from django.contrib import admin
 from .models import Post
 from comments.models import Comments
 
-# Register your models here.
-
 
 class CommentsInline(admin.TabularInline):
     model = Comments

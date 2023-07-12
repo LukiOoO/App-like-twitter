@@ -24,6 +24,7 @@ admin.site.index_title = 'Admin'
 
 
 urlpatterns = [
+    path('', include('home.urls')),
     path('admin/', admin.site.urls),
     path('c/', include('comments.urls')),
     path('p_w/', include('posts_wall.urls')),
@@ -41,3 +42,4 @@ if settings.DEBUG:
                           document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL,
                           document_root=settings.STATIC_ROOT)
+    urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]

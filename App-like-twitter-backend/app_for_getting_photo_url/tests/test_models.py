@@ -1,8 +1,8 @@
 import pytest
 import os
 from django.core.files.uploadedfile import SimpleUploadedFile
-from app_for_getting_photo_url.models import AppContentByProgrammer, StaticStorage
 from django.conf import settings
+from app_for_getting_photo_url.models import AppContentByProgrammer, StaticStorage
 
 
 @pytest.fixture

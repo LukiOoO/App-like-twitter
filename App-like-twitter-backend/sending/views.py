@@ -1,32 +1,82 @@
 from rest_framework.exceptions import NotFound
 from django.contrib.auth.tokens import default_token_generator
-from users.models import User
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import ResendActivationSerializer
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+import logging
+from celery import shared_task
+from users.models import User
+from .serializers import ResendActivationSerializer
+from users.permissions import IsProfileOwner
 
-# Create your views here.
+logging.getLogger(__name__)
 
 
-def send_activation_email(user):
+@shared_task
+def send_activation_email(user_id):
+    user = User.objects.get(id=user_id)
+
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
 
     activation_url = settings.BASE_URL + f"/s/activate/{uid}/{token}"
     activation_link = activation_url
 
-    message = f"Hello {user.nickname},<br><br>To activate your account, click on the link below:<br><a href='{activation_link}'>{activation_link}</a>"
+    message = f"""
+                <html>
+                <head>
+                <style>
+                    /* Twój styl CSS */
+                    body {{
+                        background-color: black;
+                        color: #ffffff;
+                        font-family: Arial, sans-serif;
+                    }}
+
+                    .message {{
+                        border: 1px solid #6C54C0;
+                        padding: 10px;
+                        background-color: #6C54C0;
+                        color: black;
+                    }}
+
+                    /* Dodatkowe style dla linku */
+                    .activation-link {{
+                        color: blue;
+                        text-decoration: none;
+                    }}
+
+                    .activation-link:hover {{
+                        text-decoration: underline;
+                    }}
+
+                    /* Styl dla nicku */
+                    .nickname {{
+                        color: blue;
+                    }}
+                </style>
+                </head>
+                <body>
+                    <div class="message">
+                        Hello <span class="nickname">{user.nickname}</span>,
+                        <br><br>
+                        activate your account, click on the link below:
+                        <br>
+                        <a class="activation-link" href="{activation_link}">{activation_link}</a>
+                    </div>
+                </body>
+                </html>
+                """
     email = EmailMultiAlternatives(
         subject='Account activation',
         body=message,
         from_email=settings.DEFAULT_FROM_EMAIL,
-
         to=[user.email],
     )
     email.attach_alternative(message, "text/html")
@@ -34,59 +84,112 @@ def send_activation_email(user):
 
 
 class ActivationView(APIView):
-    def get(self, request, *args, **kwargs):
-        uid = kwargs.get('uid')
-        token = kwargs.get('token')
-        user_id = request.user.id
-        try:
-            user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            raise NotFound('User not found')
+    permission_classes = [IsProfileOwner, IsAuthenticated]
 
-        if default_token_generator.check_token(user, token):
-            user.freeze_or_not = False
-            user.save()
-            return Response({'message': "Account activated"}, status=status.HTTP_200_OK)
-        else:
-            return Response({'message': "Invalid token"}, status=status.HTTP_404_NOT_FOUND)
+    def get(self, request, *args, **kwargs):
+        try:
+            uid = kwargs.get('uid')
+            token = kwargs.get('token')
+            user_id = request.user.id
+            try:
+                user = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                raise NotFound('User not found')
+
+            if default_token_generator.check_token(user, token):
+                user.freeze_or_not = False
+                user.save()
+                return Response({'message': "Account activated"}, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': "Invalid token"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_403_FORBIDDEN)
 
 
 class ResendActivationView(APIView):
     serializer_class = ResendActivationSerializer
 
-    def resend_activation_email(self, user):
+    @shared_task
+    def resend_activation_email(user_id):
+        user = User.objects.get(id=user_id)
+
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-
         activation_url = settings.BASE_URL + f"/s/activate/{uid}/{token}"
         activation_link = activation_url
+        message = f"""
+                <html>
+                <head>
+                <style>
+                    /* Twój styl CSS */
+                    body {{
+                        background-color: black;
+                        color: #ffffff;
+                        font-family: Arial, sans-serif;
+                    }}
 
-        message = f"Hello {user.nickname},<br><br>Re-activate your account, click on the link below:<br><a href='{activation_link}'>{activation_link}</a>"
+                    .message {{
+                        border: 1px solid #6C54C0;
+                        padding: 10px;
+                        background-color: #6C54C0;
+                        color: black;
+                    }}
+
+                    /* Dodatkowe style dla linku */
+                    .activation-link {{
+                        color: blue;
+                        text-decoration: none;
+                    }}
+
+                    .activation-link:hover {{
+                        text-decoration: underline;
+                    }}
+
+                    /* Styl dla nicku */
+                    .nickname {{
+                        color: blue;
+                    }}
+                </style>
+                </head>
+                <body>
+                    <div class="message">
+                        Hello <span class="nickname">{user.nickname}</span>,
+                        <br><br>
+                        Re-activate your account, click on the link below:
+                        <br>
+                        <a class="activation-link" href="{activation_link}">{activation_link}</a>
+                    </div>
+                </body>
+                </html>
+                """
         email = EmailMultiAlternatives(
             subject='Account re-activation',
             body=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-
             to=[user.email],
         )
+        print(f'The email was sent to {user.nickname}')
         email.attach_alternative(message, "text/html")
         email.send()
 
     def post(self, request):
-        serializer = ResendActivationSerializer(data=request.data)
-        if request.user.is_anonymous:
-            raise NotFound()
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                return Response({'detail': 'User with this email does not exist'})
+        try:
+            serializer = ResendActivationSerializer(data=request.data)
+            if request.user.is_anonymous:
+                raise NotFound()
+            if serializer.is_valid():
+                email = serializer.validated_data['email']
+                try:
+                    user = User.objects.get(email=email)
+                except User.DoesNotExist:
+                    return Response({'detail': 'User with this email does not exist'})
 
-            if user.freeze_or_not:
-                self.resend_activation_email(user)
-                return Response({'detail': 'The email was sent again'}, status=status.HTTP_200_OK)
+                if user.freeze_or_not:
+                    self.resend_activation_email.delay(user_id=user.id)
+                    return Response({'detail': 'The email was sent again'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'detail': 'Your account is not frozen.'}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'detail': 'Your account is not frozen.'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_403_FORBIDDEN)

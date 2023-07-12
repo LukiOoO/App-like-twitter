@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import Group
@@ -28,6 +29,9 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
+    def validate_different_user(user, instance):
+        if user == instance:
+            raise ValidationError('User cannot follow themselves.')
 
     email = models.EmailField(
         unique=True, max_length=255, verbose_name='email address')
@@ -43,12 +47,18 @@ class User(AbstractBaseUser):
         Group, related_name='mathsite_users', blank=True)
 
     freeze_or_not = models.BooleanField(default=True)
+    following = models.ManyToManyField(
+        'self', symmetrical=False, related_name='followers+', blank=True)
+    followers = models.ManyToManyField(
+        'self', symmetrical=False, related_name='following+', blank=True)
 
     def __str__(self):
         return f'{self.nickname}'
 
     def save(self, *args, **kwargs):
+
         self.slug = self.nickname
+
         super().save(*args, **kwargs)
 
     class Meta:

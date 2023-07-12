@@ -1,8 +1,7 @@
 from django.db import models
 from django.conf import settings
 from tags.models import Tags
-from django.utils.html import format_html
-# Create your models here.
+from users.models import User
 
 
 class Post(models.Model):
@@ -17,3 +16,8 @@ class Post(models.Model):
 
     def __str__(self) -> str:
         return self.text
+
+
+class Like(models.Model):
+    posts = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)

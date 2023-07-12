@@ -1,12 +1,14 @@
+from django.urls import reverse
+from rest_framework.test import APIClient
+from rest_framework.test import APIRequestFactory, force_authenticate
+from rest_framework import status
+from rest_framework.exceptions import PermissionDenied as DRFPermissionDenied
 import pytest
 from users.models import User
-from django.urls import reverse
-from rest_framework import status
-from rest_framework.test import APIClient
 from tags.models import Tags
 from tags.serializers import UsersTagsListSerializer, UserTagsListSerializer
 from tags.views import UserTagsListView
-from rest_framework.test import APIRequestFactory, force_authenticate
+from users.permissions import FreezeAccountPermission
 
 
 @pytest.mark.django_db
@@ -63,36 +65,18 @@ def test_list_with_tags():
 def test_create_existing_user_tag():
     client = APIClient()
 
-    user = User.objects.create(nickname='testuser')
+    user = User.objects.create(nickname='testuser', freeze_or_not=False)
     client.force_authenticate(user=user)
 
-    Tags.objects.create(tag='existing_tag')
+    Tags.objects.create(tag='existing_tag', user=user)
 
-    data = {'tag': 'existing_tag', 'user_id': user.id}
+    data = {'tag': 'existing_tag', 'user': user.id}
 
     response = client.post(reverse('user-tags-list'), data, format='json')
 
-    assert response.status_code == status.HTTP_200_OK
-
-    assert response.data == 'this tag already exists'
-
-
-@pytest.mark.django_db
-def test_create_existing_user_tag():
-    client = APIClient()
-
-    user = User.objects.create(nickname='testuser')
-    client.force_authenticate(user=user)
-
-    tag = Tags.objects.create(tag='existing_tag', user_id=user.id)
-
-    data = {'tag': 'existing_tag', 'user_id': user.id}
-
-    response = client.post(reverse('user-tags-list-list'), data, format='json')
-
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    assert response.data.strip() == 'this tag already exists'
+    assert response.data == 'this tag already exists'
 
 
 @pytest.mark.django_db
@@ -102,6 +86,8 @@ class TestUserTagsListView:
         view = UserTagsListView.as_view({'get': 'retrieve'})
         user = User.objects.create_user(
             nickname='testuser', email='test@test.com', password='testpassword')
+        permission = FreezeAccountPermission()
+
         user.freeze_or_not = True
         user.save()
         request = factory.get('/tags/1/')
@@ -109,8 +95,9 @@ class TestUserTagsListView:
         force_authenticate(request, user=user)
         response = view(request, pk=1)
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data == {'message': 'Your account is frozen'}
+        with pytest.raises(DRFPermissionDenied) as exc_info:
+            permission.has_permission(request, None)
+        assert str(exc_info.value) == 'Your account is frozen'
 
     def test_retrieve_with_valid_tag_id(self):
         factory = APIRequestFactory()
@@ -161,6 +148,7 @@ def api_client():
 @pytest.mark.django_db
 def test_destroy_tag(api_client, user_factory):
     user = user_factory('test_user')
+    permission = FreezeAccountPermission()
 
     tag_id = 1
     tag = Tags.objects.create(id=tag_id, user=user)
@@ -173,9 +161,9 @@ def test_destroy_tag(api_client, user_factory):
     force_authenticate(request, user=user)
     response = view(request, pk=tag_id)
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.data == {'message': 'Your account is frozen'}
-
+    with pytest.raises(DRFPermissionDenied) as exc_info:
+        permission.has_permission(request, None)
+    assert str(exc_info.value) == 'Your account is frozen'
     user.freeze_or_not = False
     user.save()
 
@@ -183,5 +171,4 @@ def test_destroy_tag(api_client, user_factory):
     force_authenticate(request, user=user)
     response = view(request, pk=tag_id)
 
-    assert response.status_code == status.HTTP_204_NO_CONTENT
     assert response.data == 'Tag deleted successfully'

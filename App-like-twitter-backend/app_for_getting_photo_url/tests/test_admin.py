@@ -1,4 +1,3 @@
-# test_admin.py
 import pytest
 from django.contrib.admin.sites import AdminSite
 from app_for_getting_photo_url.admin import AppContentByProgrammerAdmin

@@ -47,6 +47,7 @@ def test_user_admin_should_have_correct_fieldsets(user_admin):
         (None, {'fields': ('email', 'nickname',  'slug',  'avatar')}),
         ('Permissions', {'fields': ('staff', 'groups')}),
         ('Password', {'fields': ('password',)}),
+        ('Followers and following', {'fields': ('followers', 'following')})
     )
     assert user_admin.fieldsets == expected_fieldsets
 
@@ -72,4 +73,4 @@ def test_user_admin_should_have_correct_ordering(user_admin):
 
 
 def test_user_admin_should_have_correct_filter_horizontal(user_admin):
-    assert user_admin.filter_horizontal == ('groups',)
+    assert user_admin.filter_horizontal == ('groups', 'followers', 'following')

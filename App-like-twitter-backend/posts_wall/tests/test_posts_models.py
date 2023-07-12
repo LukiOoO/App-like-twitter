@@ -1,7 +1,9 @@
-import pytest
-from mixer.backend.django import mixer
 from django.conf import settings
+from mixer.backend.django import mixer
+import pytest
+from users.models import User
 from tags.models import Tags
+from posts_wall.models import Post, Like
 from posts_wall.models import Post
 
 
@@ -24,3 +26,20 @@ class TestPostModel:
         assert post in Post.objects.all()
         assert tag1 in post.tags.all()
         assert tag2 in post.tags.all()
+
+
+@pytest.fixture
+def user():
+    return User.objects.create(nickname='testuser')
+
+
+@pytest.fixture
+def post(user):
+    return Post.objects.create(text='Test Post', user=user)
+
+
+@pytest.mark.django_db
+def test_like_model(post, user):
+    like = Like.objects.create(posts=post, user=user)
+    assert like.posts == post
+    assert like.user == user

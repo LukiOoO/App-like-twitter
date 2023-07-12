@@ -1,8 +1,8 @@
-from django.contrib import admin
+import pytest
 from django.test import RequestFactory
+from django.contrib import admin
 from comments.admin import CommentsAdmin
 from comments.models import Comments
-import pytest
 
 
 @pytest.mark.django_db

@@ -10,7 +10,7 @@ class UserCreateSerializer(BaseUserCreateSerializer):
 
     def create(self, validated_data):
         user = super().create(validated_data)
-        send_activation_email(user)
+        send_activation_email(user.id)
         return user
 
 
@@ -30,3 +30,55 @@ class ResetPasswordSerializer(serializers.Serializer):
     class Meta:
         model = User
         fields = ['current_password', 'new_password']
+
+
+class FollowersSerializer(serializers.ModelSerializer):
+
+    follower = serializers.SerializerMethodField()
+
+    def get_follower(self, obj):
+        return obj.nickname, obj.id
+
+    class Meta:
+        model = User
+        fields = ['follower']
+
+
+class YouAreFollowing(serializers.ModelSerializer):
+    following = serializers.SerializerMethodField()
+
+    def get_following(self, obj):
+        return obj.nickname, obj.id
+
+    class Meta:
+        model = User
+        fields = ['following']
+
+
+class UnfollowUserSerializer(serializers.ModelSerializer):
+    unfollow_user = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'is_active', 'nickname', 'email', 'avatar',
+                  'freeze_or_not', 'unfollow_user']
+        read_only_fields = ['id', 'is_active', 'nickname', 'email', 'avatar',
+                            'freeze_or_not']
+
+
+class FollowUserSerializer(serializers.ModelSerializer):
+    follow_user = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'is_active', 'nickname', 'email', 'avatar',
+                  'freeze_or_not', 'follow_user']
+        read_only_fields = ['id', 'is_active', 'nickname', 'email', 'avatar',
+                            'freeze_or_not']
+
+
+class SearchUserProfile(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = '__all__'

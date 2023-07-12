@@ -5,9 +5,6 @@ from rest_framework import serializers
 from users.models import User
 
 
-# User = get_user_model()
-
-
 class CustomTokenCreateSerializer(TokenCreateSerializer):
 
     def validate(self, attrs):

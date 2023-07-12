@@ -1,10 +1,10 @@
-from django.test import RequestFactory
-from users.models import User
+import pytest
 from django.urls import reverse
 from mixer.backend.django import mixer
 from django.contrib.admin.sites import AdminSite
+from django.test import RequestFactory
+from users.models import User
 from posts_wall.admin import Post, PostsAdmin, Comments, CommentsInline
-import pytest
 
 
 @pytest.mark.django_db

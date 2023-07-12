@@ -1,6 +1,6 @@
-import pytest
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
+import pytest
 from tags.models import Tags
 
 
