@@ -1,0 +1,265 @@
+/*BANNER */
+:root {
+  --primary-text-color: #f1f6f9;
+}
+
+.banner-div {
+  background-color: #000000;
+  z-index: 1000;
+  position: fixed;
+  height: 125px;
+  margin-top: -30px;
+  width: 100vw;
+  display: flex;
+}
+
+.h1-banner {
+  position: absolute;
+  color: var(--primary-text-color);
+  top: 166px;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.banner-image {
+  z-index: 0;
+  margin: -5px 0 0 -5px;
+  height: 200px;
+  width: 300px;
+  border-radius: 10px;
+  padding: 0 30px 25px 0;
+}
+
+@media screen and (max-width: 600px) {
+  .banner-image {
+    height: 140px;
+    width: 200px;
+  }
+  .h1-banner {
+    top: 115px;
+    font-size: 25px;
+  }
+}
+@media (max-width: 600px) {
+  /* style dla małych urządzeń */
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  /* style dla średnich urządzeń */
+}
+
+@media (min-width: 1025px) {
+  /* style dla dużych urządzeń */
+}
+
+/* */
+
+/*FOOTER */
+:root {
+  --footer-text-color: #f1f6f9;
+  --footer-separator-opacity: 0.5;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100vw;
+  height: 80px;
+  color: var(--footer-text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #000000;
+}
+
+.footer__description {
+  margin-bottom: -10px;
+}
+
+.footer__separator {
+  width: 50%;
+  color: var(--footer-text-color);
+  height: 0px;
+  opacity: var(--footer-separator-opacity);
+}
+
+.footer__author {
+  margin: 0;
+}
+
+@media screen and (max-width: 600px) {
+  .footer__author {
+    font-size: 10px;
+  }
+
+  .footer__description {
+    font-size: 11px;
+  }
+}
+
+/* */
+
+/*CREATE POST */
+.cr_p {
+  margin-top: 250px;
+}
+
+/* */
+
+/*POSTS WAALL  */
+.posts-container {
+  overflow: auto;
+  max-height: 80vh;
+  margin: 0 auto;
+  scrollbar-width: none; /* dla Firefox */
+  -ms-overflow-style: none;
+  text-align: center;
+  top: 225px;
+  position: relative;
+}
+.posts-container::-webkit-scrollbar {
+  width: 0px; /* dla WebKit, Blink, Chrome, Safari */
+}
+p {
+  padding: 10px;
+}
+.post {
+  border: 1px solid #f1f6f9;
+  width: 40vw;
+  border-radius: 10px;
+  background-color: #111213;
+  margin: 30px auto;
+}
+
+.bottom-div-part {
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid #f1f6f9;
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  height: 60px;
+}
+.tags {
+  margin-left: 10px;
+}
+
+.post-img,
+.post-gif {
+  display: flex;
+  margin: 10px auto;
+  height: 50%;
+  width: 50%;
+
+  transition: transform 0.3s ease;
+}
+
+.bottom-like-part {
+  display: flex;
+}
+
+.icon {
+  margin-top: 22px;
+  margin-bottom: 17px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+
+.post-img-zoomed,
+.post-gif-zoomed {
+  transform: scale(1.5);
+  max-width: 60%;
+  margin: 50px auto;
+}
+
+.loading-div {
+  color: #f1f6f9;
+  display: flex;
+  text-align: center;
+  font-size: 40px;
+  width: 90vw;
+  height: 500px;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  /* style dla małych urządzeń */
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  /* style dla średnich urządzeń */
+}
+
+@media (min-width: 1025px) {
+  /* style dla dużych urządzeń */
+}
+
+/* */
+
+/*SEARCH */
+.search {
+  margin-top: 200px;
+}
+
+/* */
+
+/*APP */
+
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* */
+
+/* INDEX */
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+/* */

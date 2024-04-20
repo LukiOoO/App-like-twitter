@@ -1,0 +1,21 @@
+body {
+  overflow: hidden;
+  margin: 0;
+  font-family: "Inconsolata", monospace;
+  background-color: #000000;
+  color: #f1f6f9;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body::-webkit-scrollbar {
+  background-color: #2b2c2e;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+body::-webkit-scrollbar-thumb {
+  background-color: #53525a;
+  border-radius: 5px;
+}
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #f1f6f9;
+}

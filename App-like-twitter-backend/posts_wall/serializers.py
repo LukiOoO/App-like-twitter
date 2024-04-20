@@ -1,12 +1,21 @@
 from rest_framework import serializers
 from tags.models import Tags
 from .models import Post, Like
+from PIL import Image
+from rest_framework.exceptions import ValidationError
 
 
 def validate_tags(value):
     if not value:
         raise serializers.ValidationError("At least one tag is required.")
     return value
+
+
+def validate_images(image):
+    image = Image.open(image)
+    width, height = image.size
+    if height > 1000:
+        raise ValidationError("Wrong image height")
 
 
 class UserpPostManagerSerializer(serializers.ModelSerializer):
@@ -20,6 +29,7 @@ class UserpPostManagerSerializer(serializers.ModelSerializer):
 
     )
     likes = serializers.SerializerMethodField()
+    image = serializers.ImageField(validators=[validate_images])
 
     def get_likes(self, obj):
         likes = Like.objects.filter(posts=obj)

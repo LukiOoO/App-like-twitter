@@ -6,5 +6,5 @@ from . import models
 @admin.register(models.AppContentByProgrammer)
 class AppContentByProgrammerAdmin(admin.ModelAdmin):
     content = models.AppContentByProgrammer()
-    list_display = ['name', 'created_at']
+    list_display = ['id', 'name', 'created_at']
     list_per_page = 15

@@ -29,7 +29,7 @@ urlpatterns = [
     path('c/', include('comments.urls')),
     path('p_w/', include('posts_wall.urls')),
     path('t/', include('tags.urls')),
-    path('a_f_g-P_u/', include('app_for_getting_photo_url.urls')),
+    path('a_f_g_P_u/', include('app_for_getting_photo_url.urls')),
     path('s/', include('sending.urls')),
     path('u/', include('users.urls')),
     path('u/', include('djoser.urls')),
