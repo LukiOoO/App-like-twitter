@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'app_for_getting_photo_url',
 
 
+
 ]
 
 MIDDLEWARE = [

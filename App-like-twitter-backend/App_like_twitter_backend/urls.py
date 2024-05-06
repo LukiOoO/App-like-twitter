@@ -23,6 +23,7 @@ admin.site.site_header = 'App like twitter  Admin'
 admin.site.index_title = 'Admin'
 
 
+
 urlpatterns = [
     path('', include('home.urls')),
     path('admin/', admin.site.urls),

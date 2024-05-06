@@ -1,6 +1,0 @@
-.grid-container {
-  display: flex;
-  grid-template-columns: 1fr 1fr;
-  grid-gap: 16px; /* Opcjonalny odstęp między elementami */
-  height: 100vh;
-}
