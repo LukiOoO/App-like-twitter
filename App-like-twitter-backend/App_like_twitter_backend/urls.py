@@ -27,8 +27,8 @@ admin.site.index_title = 'Admin'
 urlpatterns = [
     path('', include('home.urls')),
     path('admin/', admin.site.urls),
-    path('c/', include('comments.urls')),
     path('p_w/', include('posts_wall.urls')),
+    path('c/', include('comments.urls')),
     path('t/', include('tags.urls')),
     path('a_f_g_P_u/', include('app_for_getting_photo_url.urls')),
     path('s/', include('sending.urls')),

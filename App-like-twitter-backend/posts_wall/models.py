@@ -7,7 +7,7 @@ from users.models import User
 class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
-    text = models.CharField(max_length=280)
+    text = models.CharField(max_length=255)
     image = models.ImageField(upload_to='post_images', blank=True, null=True)
     video = models.FileField(upload_to='post_videos', blank=True, null=True)
     gif = models.FileField(upload_to='post_gif', blank=True, null=True)

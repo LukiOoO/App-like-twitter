@@ -10,14 +10,6 @@ def validate_tags(value):
         raise serializers.ValidationError("At least one tag is required.")
     return value
 
-
-def validate_images(image):
-    image = Image.open(image)
-    width, height = image.size
-    if height > 1000:
-        raise ValidationError("Wrong image height")
-
-
 class UserpPostManagerSerializer(serializers.ModelSerializer):
     post_id = serializers.IntegerField(source='id', read_only=True)
     text = serializers.CharField(max_length=255)
@@ -29,7 +21,7 @@ class UserpPostManagerSerializer(serializers.ModelSerializer):
 
     )
     likes = serializers.SerializerMethodField()
-    image = serializers.ImageField(validators=[validate_images])
+    image = serializers.ImageField(required=False)
 
     def get_likes(self, obj):
         likes = Like.objects.filter(posts=obj)
