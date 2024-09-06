@@ -9,9 +9,13 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'open-sans': ['"Open Sans"', 'sans-serif'],
+        "open-sans": ['"Open Sans"', "sans-serif"],
+      },
+      colors: {
+        somegray: "#222831",
+        lighterDark: "#111111 ",
       },
     },
   },
   plugins: [],
-}
+};

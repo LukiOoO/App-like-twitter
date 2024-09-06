@@ -31,36 +31,6 @@ def send_activation_email(user_id):
     message = f"""
                 <html>
                 <head>
-                <style>
-                    /* Twój styl CSS */
-                    body {{
-                        background-color: black;
-                        color: #ffffff;
-                        font-family: Arial, sans-serif;
-                    }}
-
-                    .message {{
-                        border: 1px solid #6C54C0;
-                        padding: 10px;
-                        background-color: #6C54C0;
-                        color: black;
-                    }}
-
-                    /* Dodatkowe style dla linku */
-                    .activation-link {{
-                        color: blue;
-                        text-decoration: none;
-                    }}
-
-                    .activation-link:hover {{
-                        text-decoration: underline;
-                    }}
-
-                    /* Styl dla nicku */
-                    .nickname {{
-                        color: blue;
-                    }}
-                </style>
                 </head>
                 <body>
                     <div class="message">
@@ -120,36 +90,6 @@ class ResendActivationView(APIView):
         message = f"""
                 <html>
                 <head>
-                <style>
-                    /* Twój styl CSS */
-                    body {{
-                        background-color: black;
-                        color: #ffffff;
-                        font-family: Arial, sans-serif;
-                    }}
-
-                    .message {{
-                        border: 1px solid #6C54C0;
-                        padding: 10px;
-                        background-color: #6C54C0;
-                        color: black;
-                    }}
-
-                    /* Dodatkowe style dla linku */
-                    .activation-link {{
-                        color: blue;
-                        text-decoration: none;
-                    }}
-
-                    .activation-link:hover {{
-                        text-decoration: underline;
-                    }}
-
-                    /* Styl dla nicku */
-                    .nickname {{
-                        color: blue;
-                    }}
-                </style>
                 </head>
                 <body>
                     <div class="message">
