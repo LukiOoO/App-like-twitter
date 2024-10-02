@@ -21,7 +21,7 @@ class UserpPostManagerSerializer(serializers.ModelSerializer):
 
     )
     likes = serializers.SerializerMethodField()
-    image = serializers.ImageField(required=False)
+    image = serializers.ImageField(required=False, allow_null=True)
 
     def get_likes(self, obj):
         likes = Like.objects.filter(posts=obj)
@@ -41,13 +41,16 @@ class UserpPostManagerSerializer(serializers.ModelSerializer):
 
 class ShowUserPostsSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
+    user_id = serializers.SerializerMethodField()
     post_id = serializers.IntegerField(source='id', read_only=True)
     likes = serializers.SerializerMethodField()
     tags = serializers.StringRelatedField(many=True, read_only=True)
-    follow_post = serializers.IntegerField(write_only=True)
+    follow_unfollow_post = serializers.IntegerField(write_only=True)
 
     def get_user(self, obj):
         return obj.user.nickname
+    def user_id(self, obj):
+        return obj.user.id
 
     def get_likes(self, obj):
         likes = Like.objects.filter(posts=obj)
@@ -57,24 +60,24 @@ class ShowUserPostsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['user', "text", "image", "video", "gif",
-                  "tags", "created_at", 'post_id', 'likes', 'follow_post']
-        read_only_fields = ['user', "text", "image", "video", "gif",
+        fields = ['user',"user_id", "text", "image", "video", "gif",
+                  "tags", "created_at", 'post_id', 'likes', 'follow_unfollow_post']
+        read_only_fields = ['user',"user_id", "text", "image", "video", "gif",
                             "tags", "created_at", 'post_id', 'likes']
 
 
 class SearchPostByTagsSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
+    user_id = serializers.SerializerMethodField()
+    post_id = serializers.IntegerField(source='id', read_only=True)
     likes = serializers.SerializerMethodField()
-    tags = serializers.SlugRelatedField(
-        many=True,
-        slug_field='tag',
-        queryset=Tags.objects.all(),
-
-    )
+    tags = serializers.StringRelatedField(many=True, read_only=True)
+    follow_unfollow_post = serializers.IntegerField(write_only=True)
 
     def get_user(self, obj):
         return obj.user.nickname
+    def user_id(self, obj):
+        return obj.user.id
 
     def get_likes(self, obj):
         likes = Like.objects.filter(posts=obj)
@@ -84,4 +87,7 @@ class SearchPostByTagsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = '__all__'
+        fields = ['user',"user_id", "text", "image", "video", "gif",
+                  "tags", "created_at", 'post_id', 'likes', 'follow_unfollow_post']
+        read_only_fields = ['user',"user_id", "text", "image", "video", "gif",
+                            "tags", "created_at", 'post_id', 'likes']

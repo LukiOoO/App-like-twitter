@@ -14,13 +14,23 @@ import WebPageImg from "@/assets/webpage.png";
 import axios from "axios";
 import { usePathname } from "next/navigation";
 
-export default function LeftSitePanel() {
+type Props = {
+  RegisterShouldPopup: boolean;
+};
+
+export default function LeftSitePanel({ RegisterShouldPopup }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [showPopupRegister, setShowPopupRegister] = useState(false);
   const [showPopupLogin, setShowPopupLogin] = useState(false);
   const [tokenAvailable, setTokenAvailable] = useState(false);
   const [userNickname, setUserNickname] = useState("");
+
+  useEffect(() => {
+    if (RegisterShouldPopup) {
+      setShowPopupRegister((prev) => !prev);
+    }
+  }, [RegisterShouldPopup]);
 
   const tokenInMemoryCheack = () => {
     if (Cookies.get("access")) {
@@ -37,6 +47,7 @@ export default function LeftSitePanel() {
         }
       );
       setUserNickname(response.data.nickname);
+      Cookies.set("Nick", response.data.nickname);
     } catch (error: any) {
       console.log(error.message);
     }
@@ -51,6 +62,7 @@ export default function LeftSitePanel() {
   const logOutUser = () => {
     Cookies.remove("access");
     Cookies.remove("refresh");
+    Cookies.remove("Nick");
     window.location.reload();
   };
 
@@ -112,7 +124,7 @@ export default function LeftSitePanel() {
               <button
                 className="flex w-full sm:w-28 h-full items-center justify-center"
                 onClick={() => {
-                  router.push("/profile");
+                  router.push("/logInProfile");
                 }}
               >
                 <span className="mr-2">Profile</span>

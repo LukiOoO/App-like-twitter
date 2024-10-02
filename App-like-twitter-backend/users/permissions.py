@@ -17,5 +17,5 @@ class IsAnonymousUser(permissions.BasePermission):
 class FreezeAccountPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.freeze_or_not:
-            raise PermissionDenied('Your account is frozen')
+            raise PermissionDenied({'Your account is frozen' : request.user.email})
         return True

@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@nextui-org/checkbox": "^2.1.4",
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
+    "framer-motion": "^11.9.0",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "next": "14.2.4",
@@ -19,6 +21,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
+    "react-infinite-scroll-component": "^6.1.0",
+    "react-transition-group": "^4.4.5",
     "styled-components": "^6.1.11"
   },
   "devDependencies": {
@@ -28,6 +32,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/react-transition-group": "^4.4.11",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "autoprefixer": "^10.4.19",

@@ -2,7 +2,7 @@ from django.urls import path
 from djoser.views import UserViewSet
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsProfileOwner, FreezeAccountPermission
-from .views import MyUserViewSet, ResetPassword, YourFollowersView, YourFollowsView, FollowUserView, UnFollowUserView, SearchUserProfile, UserPosts
+from .views import MyUserViewSet, ResetPassword, YourFollowersView, YourFollowsView, FollowUserView, UnFollowUserView, SearchUserProfile, UserPosts,UpdateAvatarView, AllUserComments
 from sending.views import ResendActivationView
 
 urlpatterns = [
@@ -25,7 +25,12 @@ urlpatterns = [
     path('search-user-profile/',
          SearchUserProfile.as_view({'get': 'list'}), name='search-user-profile'),
     path('search-user-posts/',
-         UserPosts.as_view({'get': 'list'}), name='user-posts'),
+         UserPosts.as_view({'get': 'list'}), name='user-posts'), 
+    path('user-avatar-update/', UpdateAvatarView.as_view(), name='update-avatar'),
+    path('all-user-comments/',
+          AllUserComments.as_view({'get': 'list'}), name='user-comments'),
+             
+
 
 
 ]

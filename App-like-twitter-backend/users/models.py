@@ -48,9 +48,11 @@ class User(AbstractBaseUser):
 
     freeze_or_not = models.BooleanField(default=True)
     following = models.ManyToManyField(
-        'self', symmetrical=False, related_name='followers+', blank=True)
-    followers = models.ManyToManyField(
-        'self', symmetrical=False, related_name='following+', blank=True)
+        'self',
+        symmetrical=False,
+        related_name='followers',
+        blank=True
+    )
 
     def __str__(self):
         return f'{self.nickname}'

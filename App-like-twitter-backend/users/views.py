@@ -7,12 +7,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets
 import logging
-from users.models import User
+from .models import User
 from posts_wall.models import Post
 from posts_wall.serializers import ShowUserPostsSerializer
 from .models import User
-from .serializers import UserSerializer, ResetPasswordSerializer, FollowersSerializer, UnfollowUserSerializer, YouAreFollowing, FollowUserSerializer, SearchUserProfile
+from .serializers import UserSerializer, ResetPasswordSerializer, FollowersSerializer, UnfollowUserSerializer, YouAreFollowing, FollowUserSerializer, SearchUserProfileSerializer,UserAvatarSerializer,UserCommentsSerializer
 from .permissions import IsProfileOwner, FreezeAccountPermission
+from comments.models import Comments
 
 logging.getLogger(__name__)
 
@@ -63,6 +64,8 @@ class FollowAndUnFollowUserView(viewsets.GenericViewSet):
         raise NotImplementedError
 
 
+
+
 class FollowersAndFollowingBaseView(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated,
                           IsProfileOwner, FreezeAccountPermission]
@@ -108,6 +111,17 @@ class MyUserViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, Gene
                 return Response(serializer.data)
         except Exception as e:
             return Response(str(e), status=status.HTTP_403_FORBIDDEN)
+
+class UpdateAvatarView(APIView):
+    permission_classes = [IsAuthenticated,
+                          IsProfileOwner, FreezeAccountPermission]
+    def put(self, request, *args, **kwargs):
+        user = request.user
+        serializer = UserAvatarSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ResetPassword(APIView):
@@ -194,7 +208,7 @@ class UnFollowUserView(FollowAndUnFollowUserView):
 
 
 class SearchUserProfile(viewsets.GenericViewSet):
-    serializer_class = SearchUserProfile
+    serializer_class = SearchUserProfileSerializer
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated,
                           IsProfileOwner, FreezeAccountPermission]
@@ -233,3 +247,23 @@ class UserPosts(viewsets.GenericViewSet):
             return Response({'detail': 'User name is required.'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(str(e), status=status.HTTP_403_FORBIDDEN)
+
+
+class AllUserComments(viewsets.ModelViewSet):
+    queryset = Comments.objects.all()
+    serializer_class = UserCommentsSerializer
+    permission_classes = [IsAuthenticated,
+                          IsProfileOwner, FreezeAccountPermission]
+
+    def list(self, request, *args, **kwargs):
+        try:
+            users_comments = Comments.objects.filter(user=self.request.user)
+            serializer = self.get_serializer(users_comments, many=True)
+            if not serializer.data:
+                return Response("You haven't created any comments ")
+            return Response({'Your comments': serializer.data})
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_403_FORBIDDEN)
+
+
+

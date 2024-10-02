@@ -2,6 +2,8 @@ from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer,
 from rest_framework import serializers
 from .models import User
 from sending.views import send_activation_email
+from django.conf import settings
+from comments.models import Comments
 
 
 class UserCreateSerializer(BaseUserCreateSerializer):
@@ -13,8 +15,20 @@ class UserCreateSerializer(BaseUserCreateSerializer):
         send_activation_email(user.id)
         return user
 
+class UserAvatarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['avatar']
+
 
 class UserSerializer(BaseUserSerializer):
+    avatar = serializers.SerializerMethodField()
+
+    def get_avatar(self, obj):
+        if obj.avatar:  
+            return f"{settings.BASE_URL}{obj.avatar.url}"
+        return None  
+    
     class Meta(BaseUserSerializer.Meta):
         model = User
         fields = ['nickname', 'email', 'avatar', 'freeze_or_not','id']
@@ -77,8 +91,34 @@ class FollowUserSerializer(serializers.ModelSerializer):
                             'freeze_or_not']
 
 
-class SearchUserProfile(serializers.ModelSerializer):
+class SearchUserProfileSerializer(serializers.ModelSerializer):
+    user_followers = serializers.SerializerMethodField()
+
+    def get_user_followers(self, obj):
+        return obj.followers.values_list('id', flat=True)
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = [
+            'id', 'email', 'nickname', 'avatar',
+            'is_active', 'freeze_or_not', 'user_followers', 'following', 'last_login'
+        ]
+
+class UserCommentsSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
+    post_id = serializers.SerializerMethodField()
+
+    def post_id(self):
+        post_id = self.context['post_id']
+        return post_id
+
+    def get_user(self, obj):
+        user = obj.user.id
+        return user
+
+    class Meta:
+        model = Comments
+        fields = ['id', 'user', 'text', 'post_id',
+                  'image', 'video', 'gif', 'created_at']
+

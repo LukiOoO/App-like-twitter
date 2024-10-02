@@ -14,6 +14,22 @@ from .permissions import IsProfileOwnerPostMg
 
 logging.getLogger(__name__)
 
+class PostDetails(viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ShowUserPostsSerializer
+    queryset = Post.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        try:
+            post_id = request.query_params.get('post_id')
+            if post_id:
+                posts = self.queryset.filter(id=post_id)
+                serializer = self.get_serializer(posts, many=True)
+                return Response(serializer.data)
+            return Response({'detail': 'No post with this id.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_403_FORBIDDEN)
+
 
 class UserPostManager(viewsets.ModelViewSet):
     queryset = Post.objects.all()
@@ -77,6 +93,7 @@ class UserPostManager(viewsets.ModelViewSet):
 
 class SearchPostByTags(viewsets.GenericViewSet):
     serializer_class = SearchPostByTagsSerializer
+    pagination_class = DefaultPagination
     queryset = Post.objects.all()
 
     def list(self, request, *args, **kwargs):
@@ -84,6 +101,10 @@ class SearchPostByTags(viewsets.GenericViewSet):
             tag_name = request.query_params.get('tag_name')
             if tag_name:
                 posts = self.queryset.filter(tags__tag__iexact=tag_name)
+                page = self.paginate_queryset(posts)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True)
+                    return self.get_paginated_response(serializer.data)
                 serializer = self.get_serializer(posts, many=True)
                 return Response(serializer.data)
             return Response({'detail': 'Tag name is required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -207,20 +228,25 @@ class ShowUserPosts(viewsets.GenericViewSet):
             if posts_page is not None:
                 serializer = self.get_serializer(posts_page, many=True)
                 return self.get_paginated_response(serializer.data)
+            # all_posts = self.get_queryset().all()
+            # serializer = self.get_serializer(all_posts, many=True)
+            # return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(str(e), status=status.HTTP_403_FORBIDDEN)
 
     def post(self, request, format=None):
         try:
-            follow_post_id = request.data.get('follow_post')
+            follow_post_id = request.data.get('follow_unfollow_post')
             try:
                 post = Post.objects.get(id=follow_post_id)
             except Post.DoesNotExist:
                 return Response({'error': 'Invalid post ID'}, status=status.HTTP_400_BAD_REQUEST)
-            if Like.objects.filter(posts=post, user=request.user).exists():
-                return Response({'error':  'You have already followed this post'}, status=status.HTTP_400_BAD_REQUEST)
-            like = Like.objects.create(posts=post, user=request.user)
-            serializer = self.get_serializer(post)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            like_exist = Like.objects.filter(posts=post, user=request.user).exists()
+            if like_exist:
+                Like.objects.filter(posts=post, user=request.user).delete()
+                return Response({'detail': "Unfollowed post successfuly"}, status=status.HTTP_200_OK)
+            Like.objects.create(posts=post, user=request.user)
+            return Response({'detail': "Follow post successfuly"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(str(e), status=status.HTTP_403_FORBIDDEN)
+

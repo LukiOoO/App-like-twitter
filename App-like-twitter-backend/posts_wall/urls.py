@@ -10,7 +10,7 @@ router.register('show_user_posts', views.ShowUserPosts,
 
 router.register('search-post-by-tags', views.SearchPostByTags,
                 basename='search-post-by-tags')
-
+router.register('post-detail', views.PostDetails, basename='search-post-details')
 comments_router = routers.NestedDefaultRouter(
     router, 'show_user_posts', lookup='show_user_posts')
 comments_router.register(
