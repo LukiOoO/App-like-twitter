@@ -1,7 +1,7 @@
 "use client";
 import "../globals.css";
 import axios from "axios";
-import Header from "@/components/Header";
+import Header from "@/components/header/Header";
 import { toast } from "react-hot-toast";
 import Cookies from "js-cookie";
 import Image from "next/image";

@@ -29,7 +29,7 @@ export default function Register({
 
   const registerUser = async () => {
     try {
-      const regisetr = await axios.post(`${process.env.API_URL}/u/users/`, {
+      const regisetr = await axios.post(`http://127.0.0.1:8000/u/users/`, {
         nickname: userData.nickname,
         email: userData.email,
         password: userData.password1,

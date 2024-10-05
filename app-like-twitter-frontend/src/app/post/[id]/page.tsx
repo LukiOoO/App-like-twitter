@@ -1,6 +1,6 @@
 "use client";
 import "../../globals.css";
-import Header from "@/components/Header";
+import Header from "@/components/header/Header";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";

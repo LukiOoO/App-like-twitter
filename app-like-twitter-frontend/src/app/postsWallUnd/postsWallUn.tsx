@@ -1,6 +1,6 @@
 "use client";
 import "../globals.css";
-import Header from "@/components/Header";
+import Header from "@/components/header/Header";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -21,7 +21,7 @@ import jwt from "jsonwebtoken";
 import AnonymusImg from "@/assets/anonymous.png";
 import AddPost from "@/app/addPostWIndow/addPostWindow";
 import InfiniteScroll from "react-infinite-scroll-component";
-import Posts from "../../components/posts";
+import Posts from "../../components/Posts";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function PostsWallUndfiend() {
