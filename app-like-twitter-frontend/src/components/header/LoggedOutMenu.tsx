@@ -6,15 +6,7 @@ import Login from "@/app/login/loginWIndow";
 import Register from "@/app/register/registerWindow";
 import LoginImg from "@/assets/login.png";
 import RegisterImg from "@/assets/register.png";
-
-interface LoggedOutMenuProps {
-  togglePopupLogin: () => void;
-  togglePopupRegister: () => void;
-  showPopupLogin: boolean;
-  showPopupRegister: boolean;
-  setShowPopupLogin: React.Dispatch<React.SetStateAction<boolean>>;
-  setShowPopupRegister: React.Dispatch<React.SetStateAction<boolean>>;
-}
+import { LoggedOutMenuProps } from "@/types/porps/headerProps";
 
 const LoggedOutMenu: React.FC<LoggedOutMenuProps> = ({
   togglePopupLogin,

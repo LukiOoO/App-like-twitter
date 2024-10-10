@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const usePopup = (RegisterShouldPopup: boolean) => {
+const usePopup = (registerShouldPopup: boolean) => {
   const [showPopupRegister, setShowPopupRegister] = useState(false);
   const [showPopupLogin, setShowPopupLogin] = useState(false);
 
@@ -15,10 +15,10 @@ const usePopup = (RegisterShouldPopup: boolean) => {
   };
 
   useEffect(() => {
-    if (RegisterShouldPopup) {
+    if (registerShouldPopup) {
       setShowPopupRegister((prev) => !prev);
     }
-  }, [RegisterShouldPopup]);
+  }, [registerShouldPopup]);
 
   return {
     showPopupRegister,

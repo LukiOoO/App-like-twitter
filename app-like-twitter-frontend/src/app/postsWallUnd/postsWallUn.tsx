@@ -21,7 +21,7 @@ import jwt from "jsonwebtoken";
 import AnonymusImg from "@/assets/anonymous.png";
 import AddPost from "@/app/addPostWIndow/addPostWindow";
 import InfiniteScroll from "react-infinite-scroll-component";
-import Posts from "../../components/Posts";
+import Posts from "@/components/posts";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function PostsWallUndfiend() {
@@ -110,7 +110,7 @@ export default function PostsWallUndfiend() {
 
   return (
     <div>
-      <Header RegisterShouldPopup={shouldPopUp} />
+      <Header registerShouldPopup={shouldPopUp} />
       <Toaster />
       <div className="flex flex-col sm:flex-row ">
         <div className="w-full sm:w-4/5 flex h-screen border-x-4 border-lighterDark">

@@ -6,12 +6,9 @@ import useAuth from "@/hooks/useAuth";
 import usePopup from "@/hooks/usePopup";
 import LoggedInMenu from "./LoggedInMenu";
 import LoggedOutMenu from "./LoggedOutMenu";
+import { HeaderProps } from "@/types/porps/headerProps";
 
-type Props = {
-  RegisterShouldPopup: boolean;
-};
-
-const Header: React.FC<Props> = ({ RegisterShouldPopup }) => {
+const Header: React.FC<HeaderProps> = ({ registerShouldPopup }) => {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -24,7 +21,7 @@ const Header: React.FC<Props> = ({ RegisterShouldPopup }) => {
     togglePopupRegister,
     setShowPopupLogin,
     setShowPopupRegister,
-  } = usePopup(RegisterShouldPopup);
+  } = usePopup(registerShouldPopup);
 
   return (
     <div className="w-full h-auto">

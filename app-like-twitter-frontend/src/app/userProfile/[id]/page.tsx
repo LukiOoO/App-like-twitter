@@ -229,7 +229,7 @@ export default function UserProfile() {
 
   return (
     <div>
-      <Header />
+      <Header registerShouldPopup={false} />
       <div className="flex sm:flex-row flex-col h-screen w-screen">
         <div className="w-full sm:w-2/5 flex flex-col">
           <div className="flex-1 sm:h-2/3 ">

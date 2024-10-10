@@ -22,7 +22,7 @@ import jwt from "jsonwebtoken";
 import AnonymusImg from "@/assets/anonymous.png";
 import AddPost from "@/app/addPostWIndow/addPostWindow";
 import InfiniteScroll from "react-infinite-scroll-component";
-import Posts from "../../components/Posts";
+import Posts from "@/components/posts";
 
 export default function PostsWall() {
   const router = useRouter();
@@ -201,7 +201,7 @@ export default function PostsWall() {
   return (
     <div>
       <Toaster />
-      <Header RegisterShouldPopup={justFalse} />
+      <Header registerShouldPopup={false} />
       <div className="flex flex-col sm:flex-row ">
         <div className="w-full sm:w-4/5 flex h-screen border-x-4 border-lighterDark">
           <div className="w-4/5 mx-auto flex justify-center mt-5 sm:mt-5">

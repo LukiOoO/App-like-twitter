@@ -302,7 +302,7 @@ export default function PostDetails() {
   return (
     <div>
       <Toaster />
-      <Header />
+      <Header registerShouldPopup={false} />
       <div className="flex flex-col sm:flex-row sm:justify-between m-5 space-y-4 sm:space-y-0 sm:space-x-4 h-screen">
         <div className="w-full sm:w-2/3 flex flex-col">
           <div className="flex-1 overflow-y-auto scrollbar-hide sm:w-[60%] sm:mx-auto">
