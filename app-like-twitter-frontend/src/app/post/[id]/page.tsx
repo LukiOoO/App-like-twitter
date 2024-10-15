@@ -1,4 +1,5 @@
 "use client";
+
 import "../../globals.css";
 import Header from "@/components/header/Header";
 import axios from "axios";
@@ -17,19 +18,27 @@ import CreateTag from "@/app/createTagWindow/createTagWindow";
 import toast, { Toaster } from "react-hot-toast";
 import CommIc from "@/assets/comment.png";
 import CreateComment from "@/app/commentWindow/commentWindow";
+import Post from "@/components/post_posts/Post";
+import {
+  PostObj,
+  Comment,
+  CommentsByPost,
+} from "@/types/interfaces/interfaces";
 
 import jwt from "jsonwebtoken";
 
 export default function PostDetails() {
   const router = useRouter();
+  const nick = Cookies.get("Nick");
+  const [post, setPost] = useState<PostObj | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [userLike, setUserLike] = useState(false);
   const [isAuthor, setIsAuthor] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [showLikedByPopup, setShowLikedByPopup] = useState(false);
+
   const [showCreatedTagPopup, setShowCreatedTagPopup] = useState(false);
   const [showFindTags, setShowFindTags] = useState(false);
   const [justCreatedTag, setJustCreatedTag] = useState("");
-  const [post, setPost] = useState<any[]>([]);
   const [newFileUrls, setNewFileUrls] = useState<{
     image: string | null;
     video: string | null;
@@ -71,9 +80,13 @@ export default function PostDetails() {
   };
   console.log(selectedTags);
 
-  const togglePopupLikedBy = () => {
-    setShowLikedByPopup(!showLikedByPopup);
+  const [likedByPopupPostId, setLikedByPopupPostId] = useState<
+    number | null | undefined
+  >(null);
+  const togglePopupLikedBy = (postId?: number | null): void => {
+    setLikedByPopupPostId(postId);
   };
+
   const togglePopupCreatedTag = () => {
     setShowCreatedTagPopup(!showCreatedTagPopup);
   };
@@ -81,19 +94,24 @@ export default function PostDetails() {
     setShowFindTags(!showFindTags);
   };
   const followUnFollow = async () => {
-    const response = await axios.post(
-      "http://127.0.0.1:8000/p_w/show_user_posts/",
-      {
-        follow_unfollow_post: id.split("/")[2],
-      },
-      {
-        headers: { Authorization: "JWT " + Cookies.get("access") },
-      }
-    );
-    await postDetail();
+    if (!id.split("/")[2]) {
+      toast.error("Invalid post ID.");
+      return;
+    }
     try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/p_w/show_user_posts/",
+        {
+          follow_unfollow_post: id.split("/")[2],
+        },
+        {
+          headers: { Authorization: "JWT " + Cookies.get("access") },
+        }
+      );
+      await postDetail();
     } catch (error: any) {
       console.log(error);
+      toast.error("An error occurred while following/unfollowing.");
     }
   };
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,29 +130,36 @@ export default function PostDetails() {
         }
       );
 
-      setNewPostContent({
-        text: response.data[0]["text"] || "",
-        image: response.data[0]["image"] || null,
-        video: response.data[0]["video"] || null,
-        gif: response.data[0]["gif"] || null,
-        tags: response.data[0]["tags"] || [],
-      });
+      if (response.data && response.data.length > 0) {
+        const postData = response.data[0];
+        setPost(postData);
 
-      setNewFileUrls({
-        image: response.data[0]["image"] || null,
-        video: response.data[0]["video"] || null,
-        gif: response.data[0]["gif"] || null,
-      });
+        setNewPostContent({
+          text: postData["text"] || "",
+          image: postData["image"] || null,
+          video: postData["video"] || null,
+          gif: postData["gif"] || null,
+          tags: postData["tags"] || [],
+        });
 
-      setPost(response.data);
+        setNewFileUrls({
+          image: postData["image"] || null,
+          video: postData["video"] || null,
+          gif: postData["gif"] || null,
+        });
+      } else {
+        setPost(null);
+        toast.error("Post not found.");
+      }
     } catch (error: any) {
       console.log(error);
+      toast.error("An error occurred while fetching the post.");
     }
   };
 
   const startTags = () => {
-    if (post[0] && post[0]["tags"]) {
-      const uniqueTags = post[0]["tags"].filter(
+    if (post && post.tags) {
+      const uniqueTags = post.tags.filter(
         (tag: string) => !selectedTags.includes(tag)
       );
       setSelectedTags([...selectedTags, ...uniqueTags]);
@@ -142,20 +167,20 @@ export default function PostDetails() {
   };
 
   useEffect(() => {
-    if (post.length > 0) {
+    if (post) {
       const nick = Cookies.get("Nick");
-      if (post[0].likes.liked_by.includes(nick)) {
+      if (post.likes.liked_by.includes(nick || "")) {
         setUserLike(true);
       } else {
         setUserLike(false);
       }
-    }
-    const token = Cookies.get("access") || "";
-    const decodedToken = jwt.decode(token);
-    if (decodedToken && typeof decodedToken === "object") {
-      const userId = decodedToken["user_id"];
-      if (post[0] && post[0]["user_id"]) {
-        if (post[0]["user_id"] === userId) {
+
+      const token = Cookies.get("access") || "";
+      const decodedToken = jwt.decode(token) as { [key: string]: any } | null;
+
+      if (decodedToken) {
+        const userId = decodedToken["user_id"];
+        if (post.user_id === userId) {
           setIsAuthor(true);
         } else {
           setIsAuthor(false);
@@ -163,12 +188,6 @@ export default function PostDetails() {
       }
     }
   }, [post]);
-
-  // console.log("post", post);
-  // console.log("new post content", newPostContent);
-  // console.log(userLike);
-  // console.log(isEditing);
-  // console.log("isAuthor", isAuthor);
 
   useEffect(() => {
     postDetail();
@@ -179,7 +198,6 @@ export default function PostDetails() {
   const videoInputRef = useRef<HTMLInputElement | null>(null);
   const gifInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Handle click for specific input
   const handlePencilClick = (type: "image" | "video" | "gif") => {
     if (type === "image" && imageInputRef.current) {
       imageInputRef.current.click();
@@ -189,77 +207,84 @@ export default function PostDetails() {
       gifInputRef.current.click();
     }
   };
-  const handleFileChange = (virable: "image" | "video" | "gif", event: any) => {
+  const handleFileChange = (
+    variable: "image" | "video" | "gif",
+    event: any
+  ) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
 
     const fileUrl = URL.createObjectURL(selectedFile);
 
-    setNewFileUrls({ ...newFileUrls, [virable]: fileUrl });
+    setNewFileUrls({ ...newFileUrls, [variable]: fileUrl });
 
     setNewPostContent({
       ...newPostContent,
-      [virable]: selectedFile,
+      [variable]: selectedFile,
     });
   };
 
   const updatePost = async () => {
+    if (!post) return;
+
     const formData = new FormData();
     formData.append("text", newPostContent.text);
     selectedTags.forEach((tag) => {
       formData.append("tags", tag);
     });
 
-    console.log("TESTOWE ", post[0]["image"] === newPostContent.image);
-
-    if (post[0]["image"] !== newPostContent.image) {
+    if (post.image !== newPostContent.image) {
       if (newPostContent.image) {
         formData.append("image", newPostContent.image);
       } else {
         formData.append("image", "");
       }
     }
-    if (post[0]["gif"] !== newPostContent.gif) {
+    if (post.gif !== newPostContent.gif) {
       if (newPostContent.gif) {
         formData.append("gif", newPostContent.gif);
       } else {
         formData.append("gif", "");
       }
     }
-    if (post[0]["video"] !== newPostContent.video) {
+    if (post.video !== newPostContent.video) {
       if (newPostContent.video) {
         formData.append("video", newPostContent.video);
       } else {
         formData.append("video", "");
       }
     }
+
     try {
-      const response = await axios.put(
+      await axios.put(
         `http://127.0.0.1:8000/p_w/user-post-manager/${id.split("/")[2]}/`,
         formData,
         {
           headers: {
-            Authorization: `JWT  ${Cookies.get("access")}`,
+            Authorization: `JWT ${Cookies.get("access")}`,
             "Content-Type": "multipart/form-data",
           },
         }
       );
       await postDetail();
-      toast.success("The post has been updated");
+      toast.success("Post został zaktualizowany");
       setIsEditing(false);
     } catch (error: any) {
-      if (error.response.data) {
-        const errorString = JSON.stringify(error.response);
+      if (error.response && error.response.data) {
+        const errorString = JSON.stringify(error.response.data);
+        const errorMessage =
+          errorString.split("string='")[1]?.split(".")[0] ||
+          "Aktualizacja nie powiodła się.";
         console.log(errorString);
-        toast.error(`TEXT - ${errorString.split("string='")[1].split(".")[0]}`);
+        toast.error(`Błąd: ${errorMessage}`);
       } else {
-        toast.error("Something went wrong");
+        toast.error("Coś poszło nie tak");
       }
     }
   };
   const deletePost = async () => {
     try {
-      const response = await axios.delete(
+      await axios.delete(
         `http://127.0.0.1:8000/p_w/user-post-manager/${id.split("/")[2]}/`,
         {
           headers: {
@@ -271,14 +296,14 @@ export default function PostDetails() {
       toast.success("The post has been deleted");
     } catch (error: any) {
       console.log(error);
+      toast.error("An error occurred while deleting the post.");
     }
   };
 
-  const [comments, setComments] = useState<any[]>([]);
   const [createComWinpopup, setcreateComWinpopup] = useState(false);
 
-  console.log("COMMENST", comments);
-  const togglePopupCreateCom = () => {
+  console.log("COMMENTS", comments);
+  const togglePopupCreateCom = (): void => {
     setcreateComWinpopup(!createComWinpopup);
   };
 
@@ -293,6 +318,7 @@ export default function PostDetails() {
       setComments(response.data);
     } catch (error: any) {
       console.log(error);
+      toast.error("An error occurred while fetching comments.");
     }
   };
   const moveToUserProfile = async (nickname: string) => {
@@ -305,92 +331,20 @@ export default function PostDetails() {
       <Header registerShouldPopup={false} />
       <div className="flex flex-col sm:flex-row sm:justify-between m-5 space-y-4 sm:space-y-0 sm:space-x-4 h-screen">
         <div className="w-full sm:w-2/3 flex flex-col">
-          <div className="flex-1 overflow-y-auto scrollbar-hide sm:w-[60%] sm:mx-auto">
-            {post.length > 0 ? (
+          <div>
+            {post ? (
               <div className="space-y-6">
-                {post.map((postObj: any, index: number) => (
-                  <div key={index}>
-                    <div className="bg-gradient-to-r from-lighterDark to-gray-900 p-6 rounded-xl shadow-xl hover:shadow-2xl">
-                      <div className="flex justify-between items-center mb-2">
-                        <p
-                          className="font-semibold text-sm  hover:text-teal-600 cursor-pointer"
-                          onClick={() => moveToUserProfile(postObj.user)}
-                        >
-                          {postObj.user}
-                        </p>
-                        <p className="text-xs text-teal-600">
-                          {postObj.tags.join(" ")}
-                        </p>
-                        <div className="text-gray-400 text-xs">
-                          {new Date(postObj.created_at).toLocaleDateString()}{" "}
-                          {new Date(postObj.created_at).toLocaleTimeString()}
-                        </div>
-                      </div>
-
-                      <div className="mb-4">
-                        <p className="text-gray-200 text-sm">{postObj.text}</p>
-                      </div>
-                      <div className="flex flex-col items-center gap-4 mb-4">
-                        {postObj.image && (
-                          <img
-                            src={postObj.image}
-                            alt="Post Image"
-                            className="rounded-md shadow-lg object-cover w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48"
-                          />
-                        )}
-                        {postObj.gif && (
-                          <img
-                            src={postObj.gif}
-                            alt="Post GIF"
-                            className="rounded-md shadow-md object-cover w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48"
-                          />
-                        )}
-                        {postObj.video && (
-                          <video
-                            src={postObj.video}
-                            controls
-                            className="rounded-md shadow-lg w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48"
-                          />
-                        )}
-                      </div>
-                      <div className="flex justify-between items-center text-xs text-gray-400">
-                        <div className="flex items-center space-x-2">
-                          <Image
-                            alt="Like/Unlike"
-                            src={userLike ? FullHear : EmptyHear}
-                            width={24}
-                            height={24}
-                            className="cursor-pointer"
-                            onClick={followUnFollow}
-                          />
-                          <p>Likes: {postObj.likes.count || 0}</p>
-                          <Image
-                            src={CommIc}
-                            width={24}
-                            height={24}
-                            onClick={togglePopupCreateCom}
-                            alt="Comment Icon"
-                            className="cursor-pointer"
-                          />
-                          <p>Comments: {comments.length || 0}</p>
-                        </div>
-                        <button
-                          className="cursor-pointer"
-                          onClick={togglePopupLikedBy}
-                        >
-                          Liked by
-                        </button>
-                        {showLikedByPopup && (
-                          <LikedBy
-                            postId={postObj.post_id}
-                            togglePopup={togglePopupLikedBy}
-                            likeUsers={postObj.likes.liked_by}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                <Post
+                  postObj={post}
+                  commentsByPost={{ [post.post_id]: comments }}
+                  onPostClick={() => {}}
+                  onLikeClick={followUnFollow}
+                  onCommentClick={togglePopupCreateCom}
+                  onLikedByClick={togglePopupLikedBy}
+                  onUsernameClick={() => moveToUserProfile(post.user)}
+                  currentUserNickname={nick}
+                  likedByPopupPostId={likedByPopupPostId}
+                />
                 {isAuthor && (
                   <div className="mb-4 text-center">
                     <button
@@ -463,6 +417,7 @@ export default function PostDetails() {
                             })
                           }
                         />
+                        {/* Image Section */}
                         <div>
                           {newPostContent.image ? (
                             <div className="flex items-center space-x-4">
@@ -522,6 +477,7 @@ export default function PostDetails() {
                             </div>
                           )}
                         </div>
+                        {/* GIF Section */}
                         <div>
                           {newPostContent.gif ? (
                             <div className="flex items-center space-x-4">
@@ -684,7 +640,7 @@ export default function PostDetails() {
                 {comments
                   .slice()
                   .reverse()
-                  .map((commentObj: any, index: number) => (
+                  .map((commentObj: Comment, index: number) => (
                     <div
                       key={index}
                       className="bg-gradient-to-tl from-lighterDark to-gray-950 p-6 rounded-xl shadow-xl"
@@ -731,7 +687,7 @@ export default function PostDetails() {
                   ))}
               </div>
             ) : (
-              <div>No matches found</div>
+              <div>No comments found</div>
             )}
             {createComWinpopup && (
               <CreateComment

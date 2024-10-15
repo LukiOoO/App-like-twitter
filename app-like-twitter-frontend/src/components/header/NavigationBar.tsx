@@ -6,7 +6,7 @@ import useAuth from "@/hooks/useAuth";
 import usePopup from "@/hooks/usePopup";
 import LoggedOutMenu from "./LoggedOutMenu";
 import LoggedInMenu from "./LoggedInMenu";
-import { NavigationBarProps } from "@/types/porps/headerProps";
+import { NavigationBarProps } from "@/types/porps/props";
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
   RegisterShouldPopup,

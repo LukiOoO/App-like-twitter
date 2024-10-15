@@ -6,7 +6,7 @@ import useAuth from "@/hooks/useAuth";
 import usePopup from "@/hooks/usePopup";
 import LoggedInMenu from "./LoggedInMenu";
 import LoggedOutMenu from "./LoggedOutMenu";
-import { HeaderProps } from "@/types/porps/headerProps";
+import { HeaderProps } from "@/types/porps/props";
 
 const Header: React.FC<HeaderProps> = ({ registerShouldPopup }) => {
   const router = useRouter();

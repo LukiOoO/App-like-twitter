@@ -7,7 +7,7 @@ import NavItem from "./NavItem";
 import UserAccImg from "@/assets/useracc.png";
 import WebPageImg from "@/assets/webpage.png";
 import LogOutImg from "@/assets/logout.png";
-import { LoggedInMenuProps } from "@/types/porps/headerProps";
+import { LoggedInMenuProps } from "@/types/porps/props";
 
 const LoggedInMenu: React.FC<LoggedInMenuProps> = ({
   userNickname,

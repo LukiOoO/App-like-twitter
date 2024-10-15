@@ -69,29 +69,3 @@ body {
     display: none; /* WebKit */
   }
 }
-
-.post-enter {
-  opacity: 0;
-  transform: translateX(-100%);
-}
-
-.post-enter-active {
-  opacity: 1;
-  transform: translateX(0);
-  transition:
-    opacity 0.5s ease-in,
-    transform 0.5s ease-in;
-}
-
-.post-exit {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.post-exit-active {
-  opacity: 0;
-  transform: translateX(100%);
-  transition:
-    opacity 0.5s ease-out,
-    transform 0.5s ease-out;
-}

@@ -1,9 +1,9 @@
 "use client";
 
 import "@/app/globals.css";
-import React, { ReactNode, ComponentType } from "react";
+import React from "react";
 import Button from "../common/Button";
-import { NavItemProps } from "@/types/porps/headerProps";
+import { NavItemProps } from "@/types/porps/props";
 
 const NavItem: React.FC<NavItemProps> = ({
   onClick,

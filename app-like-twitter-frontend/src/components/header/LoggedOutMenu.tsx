@@ -6,7 +6,7 @@ import Login from "@/app/login/loginWIndow";
 import Register from "@/app/register/registerWindow";
 import LoginImg from "@/assets/login.png";
 import RegisterImg from "@/assets/register.png";
-import { LoggedOutMenuProps } from "@/types/porps/headerProps";
+import { LoggedOutMenuProps } from "@/types/porps/props";
 
 const LoggedOutMenu: React.FC<LoggedOutMenuProps> = ({
   togglePopupLogin,

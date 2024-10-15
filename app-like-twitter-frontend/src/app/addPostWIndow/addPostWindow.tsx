@@ -79,11 +79,11 @@ export default function AddPost({ togglePopup, setCreatePostWinPopup }: Props) {
     }
     try {
       const response = await axios.post(
-        "  http://127.0.0.1:8000/p_w/user-post-manager/",
+        "http://127.0.0.1:8000/p_w/user-post-manager/",
         formData,
         {
           headers: {
-            Authorization: `JWT  ${Cookies.get("access")}`,
+            Authorization: `JWT ${Cookies.get("access")}`,
             "Content-Type": "multipart/form-data",
           },
         }

@@ -22,12 +22,11 @@ import jwt from "jsonwebtoken";
 import AnonymusImg from "@/assets/anonymous.png";
 import AddPost from "@/app/addPostWIndow/addPostWindow";
 import InfiniteScroll from "react-infinite-scroll-component";
-import Posts from "@/components/posts";
+import PostList from "@/components/post_posts/PostList";
 
 export default function PostsWall() {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(true);
-  const justFalse = false;
 
   const [posts, setPosts] = useState<any[]>([]);
   const [nextPage, setNextPage] = useState<string | null>(null);
@@ -35,12 +34,13 @@ export default function PostsWall() {
   const [isCreatedPostWinPopup, setCreatePostWinPopup] = useState(false);
   const currentUserNickname = Cookies.get("Nick");
   const [searchWindow, setSearchWindow] = useState({ text: "" });
-  const [likedByPopupPostId, setLikedByPopupPostId] = useState<number | null>(
-    null
-  );
+  const [likedByPopupPostId, setLikedByPopupPostId] = useState<
+    number | null | undefined
+  >(null);
+
   const [isSearching, setIsSearching] = useState(false);
 
-  const togglePopupLikedBy = (postId: number | null) => {
+  const togglePopupLikedBy = (postId?: number | null): void => {
     setLikedByPopupPostId(postId);
   };
   const togglePopupCreate = () => {
@@ -135,10 +135,10 @@ export default function PostsWall() {
     }
   };
 
-  const moveToUserProfile = async (nickname: string) => {
+  const moveToUserProfile = (nickname?: string): void => {
     router.push(`/userProfile/${nickname}`);
   };
-  const handleRedirectCLik = (postId: number) => {
+  const handleRedirectClick = (postId?: number): void => {
     router.push(`/post/${postId}`);
   };
 
@@ -198,6 +198,98 @@ export default function PostsWall() {
 
   console.log("postByTag", postByTag);
 
+  const animationProps = {
+    initial: { opacity: 0, x: -100 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: 100 },
+    transition: { duration: 0.5, ease: "easeInOut" },
+  };
+
+  const handleLike = async (post_id?: number) => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/p_w/show_user_posts/",
+        { follow_unfollow_post: post_id },
+        {
+          headers: { Authorization: `JWT ${Cookies.get("access")}` },
+        }
+      );
+
+      console.log("Response from like/unlike:", response.data);
+
+      const action = response.data.detail;
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post.post_id === post_id) {
+            let updatedLikedBy = post.likes?.liked_by || [];
+            let updatedCount = post.likes?.count || 0;
+
+            if (action === "Follow post successfuly") {
+              if (!updatedLikedBy.includes(currentUserNickname)) {
+                updatedLikedBy = [...updatedLikedBy, currentUserNickname];
+                updatedCount += 1;
+              }
+            } else if (action === "Unfollowed post successfuly") {
+              if (updatedLikedBy.includes(currentUserNickname)) {
+                updatedLikedBy = updatedLikedBy.filter(
+                  (nick: string) => nick !== currentUserNickname
+                );
+                updatedCount -= 1;
+              }
+            }
+
+            return {
+              ...post,
+              likes: {
+                liked_by: updatedLikedBy,
+                count: updatedCount,
+              },
+            };
+          } else {
+            return post;
+          }
+        })
+      );
+      setPostByTag((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post.post_id === post_id) {
+            let updatedLikedBy = post.likes?.liked_by || [];
+            let updatedCount = post.likes?.count || 0;
+
+            if (action === "Follow post successfuly") {
+              if (!updatedLikedBy.includes(currentUserNickname)) {
+                updatedLikedBy = [...updatedLikedBy, currentUserNickname];
+                updatedCount += 1;
+              }
+            } else if (action === "Unfollowed post successfuly") {
+              if (updatedLikedBy.includes(currentUserNickname)) {
+                updatedLikedBy = updatedLikedBy.filter(
+                  (nick: string) => nick !== currentUserNickname
+                );
+                updatedCount -= 1;
+              }
+            }
+
+            return {
+              ...post,
+              likes: {
+                liked_by: updatedLikedBy,
+                count: updatedCount,
+              },
+            };
+          } else {
+            return post;
+          }
+        })
+      );
+    } catch (error) {
+      console.error("Error liking/unliking post:", error);
+    }
+  };
+  const handleLikeForPostBytags = async (post_id?: number) => {
+    await handleLike(post_id);
+  };
   return (
     <div>
       <Toaster />
@@ -210,20 +302,21 @@ export default function PostsWall() {
               className="flex-1 overflow-y-auto scrollbar-hide sm:w-[60%] sm:mx-auto"
               style={{ height: "90vh" }}
             >
-              <Posts
+              <PostList
                 posts={isSearching ? postByTag : posts}
                 fetchMorePosts={
                   isSearching ? fetchMorePostsByTag : fetchMorePosts
                 }
                 hasMore={isSearching ? hasMorePostBytag : hasMore}
-                isSearch={isSearching}
-                currentUserNickname={`${currentUserNickname}`}
+                currentUserNickname={currentUserNickname}
                 commentsByPost={commentsByPost}
-                setPosts={isSearching ? setPostByTag : setPosts}
-                moveToUserProfile={moveToUserProfile}
-                handleRedirectClick={handleRedirectCLik}
+                onUsernameClick={moveToUserProfile}
+                onCommentClick={handleRedirectClick}
+                onLikeClick={isSearching ? handleLikeForPostBytags : handleLike}
+                onLikedByClick={togglePopupLikedBy}
                 likedByPopupPostId={likedByPopupPostId}
-                togglePopupLikedBy={togglePopupLikedBy}
+                animationProps={animationProps}
+                onPostClick={() => {}}
               />
             </div>
           </div>

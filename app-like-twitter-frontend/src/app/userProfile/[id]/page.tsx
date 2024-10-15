@@ -20,6 +20,7 @@ import CommIc from "@/assets/comment.png";
 import CreateComment from "@/app/commentWindow/commentWindow";
 import jwt from "jsonwebtoken";
 import AnonymusImg from "@/assets/anonymous.png";
+import PostList from "@/components/post_posts/PostList";
 
 export default function UserProfile() {
   const router = useRouter();
@@ -223,8 +224,12 @@ export default function UserProfile() {
     }
   }, [userData, setIsAuthor, setCanUserFollowOrNot]);
 
-  const handleRedirectCLik = (postId: number) => {
+  const handleRedirectCLik = (postId?: number): void => {
     router.push(`/post/${postId}`);
+  };
+
+  const emptyFunction = () => {
+    return { [1]: [] };
   };
 
   return (
@@ -367,95 +372,19 @@ export default function UserProfile() {
           <span className="text-2xl font-bold text-slate-600 block mb-1 animate-pulse text-center">
             User Posts
           </span>
-          <div className="flex-1 overflow-y-auto scrollbar-hide sm:w-[60%] sm:mx-auto">
-            {post.length > 0 ? (
-              <div className="space-y-6">
-                {post.map((postObj: any, index: number) => (
-                  <div key={index}>
-                    <div
-                      onClick={() => handleRedirectCLik(postObj.post_id)}
-                      className="bg-gradient-to-r from-lighterDark to-gray-900 p-8 rounded-xl shadow-xl hover:shadow-2xl 
-                      transform hover:scale-105 transition-all duration-300 ease-out"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="font-semibold text-sm hover:text-teal-600 cursor-pointer">
-                          {postObj.user}
-                        </p>
-                        <p className="text-xs text-teal-600">
-                          {postObj.tags.join(" ")}
-                        </p>
-                        <div className="text-gray-400 text-xs">
-                          {new Date(postObj.created_at).toLocaleDateString()}{" "}
-                          {new Date(postObj.created_at).toLocaleTimeString()}
-                        </div>
-                      </div>
-
-                      <div className="mb-4">
-                        <p className="text-gray-200 text-sm break-all">
-                          {postObj.text}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-center gap-4 mb-4">
-                        {postObj.image && (
-                          <img
-                            src={postObj.image}
-                            alt="Post Image"
-                            className="rounded-md shadow-lg object-cover w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48"
-                          />
-                        )}
-                        {postObj.gif && (
-                          <img
-                            src={postObj.gif}
-                            alt="Post GIF"
-                            className="rounded-md shadow-md object-cover w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48"
-                          />
-                        )}
-                        {postObj.video && (
-                          <video
-                            src={postObj.video}
-                            controls
-                            className="rounded-md shadow-lg w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48"
-                          />
-                        )}
-                      </div>
-                      <div className="flex justify-between items-center text-xs text-gray-400">
-                        <div className="flex items-center space-x-2">
-                          <Image
-                            alt="Like/Unlike"
-                            src={userLike ? FullHear : EmptyHear}
-                            width={24}
-                            onClick={() => handleRedirectCLik(postObj.post_id)}
-                            height={24}
-                            className="cursor-pointer"
-                          />
-                          <p>Likes: {postObj.likes.count || 0}</p>
-                          <Image
-                            src={CommIc}
-                            onClick={() => handleRedirectCLik(postObj.post_id)}
-                            width={24}
-                            height={24}
-                            alt="Comment Icon"
-                            className="cursor-pointer"
-                          />
-                          <p>
-                            Comments:
-                            {commentsByPost[postObj.post_id]?.length || 0}
-                          </p>
-                        </div>
-                        <button
-                          className="cursor-pointer"
-                          onClick={() => handleRedirectCLik(postObj.post_id)}
-                        >
-                          Liked by
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div>No matches found</div>
-            )}
+          <div>
+            <PostList
+              extraPostClasses="hover:scale-105 transition-all duration-300 ease-out"
+              posts={post}
+              fetchMorePosts={() => {}}
+              hasMore={false}
+              commentsByPost={emptyFunction()}
+              onUsernameClick={emptyFunction}
+              onLikeClick={handleRedirectCLik}
+              onCommentClick={handleRedirectCLik}
+              onLikedByClick={handleRedirectCLik}
+              onPostClick={handleRedirectCLik}
+            />
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ import { Toaster } from "react-hot-toast";
 import jwt from "jsonwebtoken";
 import EditCommentWindow from "@/app/editCommentWindow/editCommentWindow";
 import RemoveIc from "@/assets/remove.png";
+import PostList from "@/components/post_posts/PostList";
 
 import React, { useState, useEffect, useRef } from "react";
 
@@ -47,8 +48,11 @@ export default function ProfilePage() {
     });
   };
 
-  const handleRedirectCLik = (postId: number) => {
+  const handleRedirectCLik = (postId?: number): void => {
     router.push(`/post/${postId}`);
+  };
+  const moveToUserProfile = (nickname?: string): void => {
+    router.push(`/userProfile/${nickname}`);
   };
 
   const freezeAccount = async (freeze_or_not: boolean) => {
@@ -388,6 +392,10 @@ export default function ProfilePage() {
 
   console.log("commments ", comments);
 
+  const emptyFunction = () => {
+    return { [1]: [] };
+  };
+
   useEffect(() => {
     getUserComments();
     getFollower();
@@ -398,7 +406,7 @@ export default function ProfilePage() {
   return (
     <div className="">
       <Toaster />
-      <Header />
+      <Header registerShouldPopup={false} />
       <div className="flex flex-col sm:flex-row h-screen w-full border-lighterDark border-x-4">
         <div className="w-full sm:w-2/5 h-auto sm:h-1/2 ">
           <div className="w-full flex flex-col items-center border-lighterDark border-b-4">
@@ -617,7 +625,7 @@ export default function ProfilePage() {
                 Your Tags ({Array.isArray(tags) ? tags.length : 0}):
               </span>
             </div>
-            <ul className="h-5/6 overflow-y-scroll scrollbar-hide flex flex-col">
+            <ul className="h-[70%] overflow-y-scroll scrollbar-hide flex flex-col">
               {filteredTag.length > 0 ? (
                 filteredTag.map((tagObj: any, index: number) => (
                   <li className="flex justify-center m-2" key={index}>
@@ -645,72 +653,20 @@ export default function ProfilePage() {
             <span className=" text-2xl font-bold text-slate-600 block  mb-1 animate-pulse">
               Your posts:
             </span>
-            {posts.length > 0 ? (
-              <div className=" h-[95%] overflow-y-scroll scrollbar-hide space-y-6">
-                {posts
-                  .slice()
-                  .reverse()
-                  .map((postObj: any, index: number) => (
-                    <div key={index}>
-                      <div
-                        onClick={() => handleRedirectCLik(postObj.post_id)}
-                        className="bg-gradient-to-r from-lighterDark to-gray-900 p-8 rounded-xl shadow-xl hover:shadow-2xl 
-                      transform hover:scale-105 transition-all duration-300 ease-out"
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <p> {postObj.user}</p>
-                          <p className="text-sm text-teal-600 ">
-                            {postObj.tags.map((tagObj: any) => tagObj + " ")}
-                          </p>
-                          <div className="text-gray-300 text-xs">
-                            {new Date(postObj.created_at).toLocaleDateString()}
-                            {new Date(postObj.created_at).toLocaleTimeString()}
-                          </div>
-                        </div>
-                        <div className="text-center mb-4">
-                          <p className="text-gray-200 text-sm break-all">
-                            {postObj.text}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-center mb-4 space-y-4">
-                          {postObj.image && (
-                            <img
-                              src={postObj.image}
-                              alt="post image"
-                              className="rounded-md shadow-lg object-cover"
-                              style={{ maxWidth: "300px", maxHeight: "200px" }}
-                            />
-                          )}
-
-                          {postObj.gif && (
-                            <img
-                              src={postObj.gif}
-                              alt="post gif"
-                              className="rounded-md shadow-md object-cover"
-                              style={{ maxWidth: "300px", maxHeight: "200px" }}
-                            />
-                          )}
-
-                          {postObj.video && (
-                            <video
-                              src={postObj.video}
-                              controls
-                              className="rounded-md shadow-lg"
-                              style={{ maxWidth: "300px", maxHeight: "200px" }}
-                            />
-                          )}
-                        </div>
-
-                        <div className="flex justify-between  items-center text-xs text-gray-300 ">
-                          <p>Likes: {postObj.likes["count"] || 0} </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            ) : (
-              <div>No matches found</div>
-            )}
+            <div className=" h-[95%] overflow-y-scroll scrollbar-hide space-y-6">
+              <PostList
+                extraPostClasses="hover:scale-105 transition-all duration-300 ease-out"
+                posts={posts}
+                fetchMorePosts={() => {}}
+                hasMore={false}
+                commentsByPost={emptyFunction()}
+                onUsernameClick={moveToUserProfile}
+                onLikeClick={handleRedirectCLik}
+                onCommentClick={handleRedirectCLik}
+                onLikedByClick={handleRedirectCLik}
+                onPostClick={handleRedirectCLik}
+              />
+            </div>
           </div>
           <div className="h-2/6 sm:h-1/2  text-center border-lighterDark  p-4">
             <span className="text-2xl font-bold text-slate-600 block  mb-1 animate-pulse">
