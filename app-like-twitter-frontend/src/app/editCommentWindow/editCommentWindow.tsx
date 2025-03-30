@@ -1,43 +1,20 @@
 "use client";
 
 import "../globals.css";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-hot-toast";
-import Image from "next/image";
-import RemoveIc from "@/assets/remove.png";
-import Pencil from "@/assets/pencil.png";
-
-interface CommentType {
-  gif: string | null;
-  id: number;
-  image: string | null;
-  text: string;
-  user_id: number;
-  user_nickname: string;
-  video: string | null;
-  post_id: number;
-}
-
-type Props = {
-  commentObj: CommentType;
-  togglePopup: (event: React.MouseEvent<HTMLElement>) => void;
-  getUserComments: () => void;
-  setIsEditingComment: React.Dispatch<
-    React.SetStateAction<{
-      editComment: boolean;
-      comment_id: number | null;
-    }>
-  >;
-};
+import Button from "@/components/common/Button";
+import MediaUploads, { MediaConfig } from "@/components/common/MediaUploads";
+import { EditCommentWindowProps } from "@/types/porps/props";
 
 export default function EditCommentWindow({
   togglePopup,
   getUserComments,
   setIsEditingComment,
   commentObj,
-}: Props) {
+}: EditCommentWindowProps) {
   const [newCommentContent, setNewCommentContent] = useState<{
     text: string;
     image: string | File | null;
@@ -66,19 +43,28 @@ export default function EditCommentWindow({
       gif: commentObj.gif,
       video: commentObj.video,
     });
-
-    setNewCommentContent((prevState) => ({
-      ...prevState,
+    setNewCommentContent({
       text: commentObj.text,
       image: commentObj.image,
       gif: commentObj.gif,
       video: commentObj.video,
-    }));
+    });
   }, [commentObj]);
 
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
   const gifInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileChange = (
+    type: "image" | "video" | "gif",
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+    const fileUrl = URL.createObjectURL(selectedFile);
+    setNewFileUrls((prev) => ({ ...prev, [type]: fileUrl }));
+    setNewCommentContent((prev) => ({ ...prev, [type]: selectedFile }));
+  };
 
   const editComment = async () => {
     const formData = new FormData();
@@ -120,16 +106,16 @@ export default function EditCommentWindow({
         }
       );
       await getUserComments();
-      setIsEditingComment({
-        editComment: false,
-        comment_id: null,
-      });
+      setIsEditingComment({ editComment: false, comment_id: null });
       toast.success("The comment was edited");
     } catch (error: any) {
-      if (error.response.data) {
-        const errorString = JSON.stringify(error.response["data"]);
+      if (error.response?.data) {
+        const errorString = JSON.stringify(error.response.data);
         toast.error(
-          `${errorString.split("[")[0].split(":")[0].replace(/["{]/g, "")} - ${errorString
+          `${errorString
+            .split("[")[0]
+            .split(":")[0]
+            .replace(/["{]/g, "")} - ${errorString
             .split("[")[1]
             .split(".")[0]
             .replace(/["\]]/g, "")
@@ -141,49 +127,61 @@ export default function EditCommentWindow({
     }
   };
 
-  const handlePencilClick = (type: "image" | "video" | "gif") => {
-    if (type === "image" && imageInputRef.current) {
-      imageInputRef.current.click();
-    } else if (type === "video" && videoInputRef.current) {
-      videoInputRef.current.click();
-    } else if (type === "gif" && gifInputRef.current) {
-      gifInputRef.current.click();
-    }
-  };
-
-  const handleFileChange = (
-    type: "image" | "video" | "gif",
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile) return;
-
-    const fileUrl = URL.createObjectURL(selectedFile);
-
-    setNewFileUrls({ ...newFileUrls, [type]: fileUrl });
-    setNewCommentContent({ ...newCommentContent, [type]: selectedFile });
-  };
-
   const deleteComment = async () => {
     try {
       await axios.delete(
         `http://127.0.0.1:8000/p_w/show_user_posts/${commentObj.post_id}/comments/${commentObj.id}/`,
-        {
-          headers: {
-            Authorization: `JWT ${Cookies.get("access")}`,
-          },
-        }
+        { headers: { Authorization: `JWT ${Cookies.get("access")}` } }
       );
       toast.success("The comment has been deleted");
       await getUserComments();
-      setIsEditingComment({
-        editComment: false,
-        comment_id: null,
-      });
+      setIsEditingComment({ editComment: false, comment_id: null });
     } catch (error: any) {
       console.log(error);
     }
   };
+
+  const mediaConfigs: MediaConfig[] = [
+    {
+      label: "Image",
+      type: "image",
+      fileUrl: newFileUrls.image,
+      inputAccept: "image/*",
+      inputRef: imageInputRef,
+      onEdit: () => imageInputRef.current && imageInputRef.current.click(),
+      onRemove: () => {
+        setNewCommentContent((prev) => ({ ...prev, image: null }));
+        setNewFileUrls((prev) => ({ ...prev, image: null }));
+      },
+      onFileChange: (e) => handleFileChange("image", e),
+    },
+    {
+      label: "GIF",
+      type: "gif",
+      fileUrl: newFileUrls.gif,
+      inputAccept: "image/gif",
+      inputRef: gifInputRef,
+      onEdit: () => gifInputRef.current && gifInputRef.current.click(),
+      onRemove: () => {
+        setNewCommentContent((prev) => ({ ...prev, gif: null }));
+        setNewFileUrls((prev) => ({ ...prev, gif: null }));
+      },
+      onFileChange: (e) => handleFileChange("gif", e),
+    },
+    {
+      label: "Video",
+      type: "video",
+      fileUrl: newFileUrls.video,
+      inputAccept: "video/*",
+      inputRef: videoInputRef,
+      onEdit: () => videoInputRef.current && videoInputRef.current.click(),
+      onRemove: () => {
+        setNewCommentContent((prev) => ({ ...prev, video: null }));
+        setNewFileUrls((prev) => ({ ...prev, video: null }));
+      },
+      onFileChange: (e) => handleFileChange("video", e),
+    },
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
@@ -195,221 +193,36 @@ export default function EditCommentWindow({
           placeholder="Enter your comment here"
           value={newCommentContent.text}
           onChange={(e) =>
-            setNewCommentContent({
-              ...newCommentContent,
-              text: e.target.value,
-            })
+            setNewCommentContent({ ...newCommentContent, text: e.target.value })
           }
         />
 
         <div className="flex flex-col space-y-4 mt-4">
-          {newFileUrls.image ? (
-            <div className="flex items-center justify-between">
-              <Image
-                src={newFileUrls.image}
-                alt="Uploaded Image"
-                width={100}
-                height={100}
-                className="rounded-md"
-              />
-              <div className="flex space-x-2">
-                <Image
-                  src={Pencil}
-                  alt="Edit Image"
-                  className="cursor-pointer"
-                  width={30}
-                  height={30}
-                  onClick={() => handlePencilClick("image")}
-                />
-                <Image
-                  src={RemoveIc}
-                  alt="Remove Image"
-                  className="cursor-pointer"
-                  width={30}
-                  height={30}
-                  onClick={() => {
-                    setNewCommentContent({
-                      ...newCommentContent,
-                      image: null,
-                    });
-                    setNewFileUrls({
-                      ...newFileUrls,
-                      image: null,
-                    });
-                  }}
-                />
-                <input
-                  type="file"
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  ref={imageInputRef}
-                  onChange={(e) => handleFileChange("image", e)}
-                />
-              </div>
-            </div>
-          ) : (
-            <div>
-              <button
-                className="w-full text-gray-400 hover:text-teal-500 transition"
-                onClick={() => handlePencilClick("image")}
-              >
-                Add Image
-              </button>
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                ref={imageInputRef}
-                onChange={(e) => handleFileChange("image", e)}
-              />
-            </div>
-          )}
-
-          {newFileUrls.gif ? (
-            <div className="flex items-center justify-between">
-              <Image
-                src={newFileUrls.gif}
-                alt="Uploaded GIF"
-                width={100}
-                height={100}
-                className="rounded-md"
-              />
-              <div className="flex space-x-2">
-                <Image
-                  src={Pencil}
-                  alt="Edit GIF"
-                  className="cursor-pointer"
-                  width={30}
-                  height={30}
-                  onClick={() => handlePencilClick("gif")}
-                />
-                <Image
-                  src={RemoveIc}
-                  alt="Remove GIF"
-                  className="cursor-pointer"
-                  width={30}
-                  height={30}
-                  onClick={() => {
-                    setNewCommentContent({
-                      ...newCommentContent,
-                      gif: null,
-                    });
-                    setNewFileUrls({
-                      ...newFileUrls,
-                      gif: null,
-                    });
-                  }}
-                />
-                <input
-                  type="file"
-                  accept="image/gif"
-                  style={{ display: "none" }}
-                  ref={gifInputRef}
-                  onChange={(e) => handleFileChange("gif", e)}
-                />
-              </div>
-            </div>
-          ) : (
-            <div>
-              <button
-                className="w-full text-gray-400 hover:text-teal-500 transition"
-                onClick={() => handlePencilClick("gif")}
-              >
-                Add GIF
-              </button>
-              <input
-                type="file"
-                accept="image/gif"
-                style={{ display: "none" }}
-                ref={gifInputRef}
-                onChange={(e) => handleFileChange("gif", e)}
-              />
-            </div>
-          )}
-
-          {newFileUrls.video ? (
-            <div className="flex items-center justify-between">
-              <video
-                src={newFileUrls.video}
-                controls
-                className="rounded-md"
-                style={{ maxWidth: "150px", maxHeight: "150px" }}
-              />
-              <div className="flex space-x-2">
-                <Image
-                  src={Pencil}
-                  alt="Edit Video"
-                  className="cursor-pointer"
-                  width={30}
-                  height={30}
-                  onClick={() => handlePencilClick("video")}
-                />
-                <Image
-                  src={RemoveIc}
-                  alt="Remove Video"
-                  className="cursor-pointer"
-                  width={30}
-                  height={30}
-                  onClick={() => {
-                    setNewCommentContent({
-                      ...newCommentContent,
-                      video: null,
-                    });
-                    setNewFileUrls({
-                      ...newFileUrls,
-                      video: null,
-                    });
-                  }}
-                />
-                <input
-                  type="file"
-                  accept="video/*"
-                  style={{ display: "none" }}
-                  ref={videoInputRef}
-                  onChange={(e) => handleFileChange("video", e)}
-                />
-              </div>
-            </div>
-          ) : (
-            <div>
-              <button
-                className="w-full text-gray-400 hover:text-teal-500 transition"
-                onClick={() => handlePencilClick("video")}
-              >
-                Add Video
-              </button>
-              <input
-                type="file"
-                accept="video/*"
-                style={{ display: "none" }}
-                ref={videoInputRef}
-                onChange={(e) => handleFileChange("video", e)}
-              />
-            </div>
-          )}
+          <MediaUploads mediaConfigs={mediaConfigs} />
         </div>
 
         <div className="flex justify-end space-x-4 mt-6">
-          <button
-            className="px-4 py-2 bg-teal-700 hover:bg-blue-700 text-white rounded-lg shadow-md transition"
-            type="button"
+          <Button
             onClick={editComment}
+            buttonClassName="px-4 py-2 bg-teal-700 hover:bg-blue-700 text-white rounded-lg shadow-md transition"
+            ariaLabel="Submit edited comment"
           >
             Submit
-          </button>
-          <button
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg shadow-md transition"
-            type="button"
+          </Button>
+          <Button
             onClick={togglePopup}
+            buttonClassName="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg shadow-md transition"
+            ariaLabel="Cancel edit comment"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={deleteComment}
-            className="text-gray-300 bg-slate-700 hover:bg-red-950 px-4 py-2 rounded-lg shadow"
+            buttonClassName="px-4 py-2 bg-slate-700 hover:bg-red-950 text-white rounded-lg shadow transition"
+            ariaLabel="Delete comment"
           >
             Delete
-          </button>
+          </Button>
         </div>
       </div>
     </div>

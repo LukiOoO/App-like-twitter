@@ -3,13 +3,10 @@
 import "../globals.css";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { FindTagProps } from "@/types/porps/props";
+import Button from "@/components/common/Button";
 
-type Props = {
-  togglePopup: (event: React.MouseEvent<HTMLElement>) => void;
-  onTagClick: (tag: string) => void;
-};
-
-export default function FindTags({ togglePopup, onTagClick }: Props) {
+export default function FindTags({ togglePopup, onTagClick }: FindTagProps) {
   const [tags, setTags] = useState([]);
   const [searchTags, setSearchTags] = useState("");
   const handleSearchTags = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,12 +61,12 @@ export default function FindTags({ togglePopup, onTagClick }: Props) {
             <p className="text-center text-gray-500">No tags</p>
           )}
         </div>
-        <button
+        <Button
           onClick={togglePopup}
-          className="mt-4 bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
+          buttonClassName="mt-4 bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
         >
           Close
-        </button>
+        </Button>
       </div>
     </div>
   );

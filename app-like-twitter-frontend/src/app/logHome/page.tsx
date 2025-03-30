@@ -6,23 +6,10 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import LikedBy from "@/app/likedBy/likedByWindow";
-import FindTags from "@/app/findTagsWindow/findTagsWindow";
-import EmptyHear from "@/assets/Nofollows.png";
-import FullHear from "@/assets/Follows.png";
-import Image from "next/image";
-import RemoveIc from "@/assets/remove.png";
-import Pencil from "@/assets/pencil.png";
-import CreateTag from "@/app/createTagWindow/createTagWindow";
-import toast, { Toaster } from "react-hot-toast";
-import CommIc from "@/assets/comment.png";
-import CreateComment from "@/app/commentWindow/commentWindow";
-import jwt from "jsonwebtoken";
-import AnonymusImg from "@/assets/anonymous.png";
+import { Toaster } from "react-hot-toast";
 import AddPost from "@/app/addPostWIndow/addPostWindow";
-import InfiniteScroll from "react-infinite-scroll-component";
 import PostList from "@/components/post_posts/PostList";
+import Button from "@/components/common/Button";
 
 export default function PostsWall() {
   const router = useRouter();
@@ -68,7 +55,7 @@ export default function PostsWall() {
 
       setPosts((prevPosts) => {
         const existingPostIds = new Set(prevPosts.map((post) => post.post_id));
-        const newUniquePosts = response.data.results.filter(
+        const newUniquePosts = (response.data.results || []).filter(
           (post: any) => !existingPostIds.has(post.post_id)
         );
 
@@ -303,6 +290,9 @@ export default function PostsWall() {
               style={{ height: "90vh" }}
             >
               <PostList
+                imageClass="image-item"
+                gifClass="gif-item"
+                videoClass="video-item "
                 posts={isSearching ? postByTag : posts}
                 fetchMorePosts={
                   isSearching ? fetchMorePostsByTag : fetchMorePosts
@@ -358,21 +348,21 @@ export default function PostsWall() {
               </svg>
 
               {isSearching && (
-                <button
+                <Button
                   onClick={handleCancalClik}
-                  className="text-gray-300 bg-lighterDark hover:bg-gray-800 px-4 py-2 rounded-lg shadow m-3"
+                  buttonClassName="text-gray-300 bg-lighterDark hover:bg-gray-800 px-4 py-2 rounded-lg shadow m-3"
                 >
                   Cacael
-                </button>
+                </Button>
               )}
             </div>
 
-            <button
+            <Button
               onClick={togglePopupCreate}
-              className="text-gray-300 bg-lighterDark hover:bg-gray-800 px-4 py-2 rounded-lg shadow"
+              buttonClassName="text-gray-300 bg-lighterDark hover:bg-gray-800 px-4 py-2 rounded-lg shadow"
             >
               Add post
-            </button>
+            </Button>
             {isCreatedPostWinPopup && (
               <AddPost
                 togglePopup={togglePopupCreate}

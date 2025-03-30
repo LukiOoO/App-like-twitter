@@ -5,18 +5,14 @@ import React, { useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-hot-toast";
-
-type Props = {
-  togglePopup: (event: React.MouseEvent<HTMLElement>) => void;
-  setShowCreatedTagPopup: React.Dispatch<React.SetStateAction<boolean>>;
-  jusCreatedTag: (tag: string) => void;
-};
+import { CreateTagProps } from "@/types/porps/props";
+import Button from "@/components/common/Button";
 
 export default function CreateTag({
   togglePopup,
   setShowCreatedTagPopup,
   jusCreatedTag,
-}: Props) {
+}: CreateTagProps) {
   const [newTag, setNewTag] = useState({
     tag: "",
   });
@@ -59,20 +55,20 @@ export default function CreateTag({
           placeholder="Create Tag"
           onChange={(e) => setNewTag({ ...newTag, tag: e.target.value })}
         />
-        <button
+        <Button
           onClick={() => {
             createTag(), jusCreatedTag(newTag.tag);
           }}
-          className="mt-4 bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
+          buttonClassName="mt-4 bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
         >
           Subbmit
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={togglePopup}
-          className="mt-4 bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
+          buttonClassName="mt-4 bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
         >
           Close
-        </button>
+        </Button>
       </div>
     </div>
   );

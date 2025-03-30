@@ -1,0 +1,29 @@
+# nonamegoodIdeaproject_backend/Dockerfile
+
+FROM python:3.12
+
+ENV PYTHONUNBUFFERED=1
+WORKDIR /app
+
+# Pakiety potrzebne do mysqlclient
+RUN apt-get update && apt-get install -y python3-dev default-libmysqlclient-dev gcc
+
+# Instalujemy pipenv (lub użyj requirements.txt - wg potrzeb)
+RUN pip install --upgrade pip
+RUN pip install pipenv
+
+# Kopiujemy definicje zależności (Pipfile, lock)
+COPY Pipfile Pipfile.lock /app/
+
+# Instalacja zależności
+RUN pipenv install --system --dev --deploy
+
+# Kopiujemy cały kod backendu + ewentualne skrypty .sh
+COPY . /app/
+
+# Nadaj uprawnienia plikom sh, jeśli istnieją:
+RUN chmod +x /app/wait-for-it.sh /app/docker-entrypoint.sh
+
+CMD ["./wait-for-it.sh", "db:5432", "--", "./docker-entrypoint.sh"]
+
+EXPOSE 8000

@@ -69,3 +69,14 @@ body {
     display: none; /* WebKit */
   }
 }
+
+.image-item {
+  @apply rounded-md shadow-lg object-cover w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48;
+}
+.gif-item {
+  @apply rounded-md shadow-md object-cover w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48;
+}
+
+.video-item {
+  @apply rounded-md shadow-lg w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48;
+}

@@ -1,28 +1,11 @@
 "use client";
+
 import "../globals.css";
 import Header from "@/components/header/Header";
 import axios from "axios";
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import LikedBy from "@/app/likedBy/likedByWindow";
-import FindTags from "@/app/findTagsWindow/findTagsWindow";
-import EmptyHear from "@/assets/Nofollows.png";
-import FullHear from "@/assets/Follows.png";
-import Image from "next/image";
-import RemoveIc from "@/assets/remove.png";
-import Pencil from "@/assets/pencil.png";
-import CreateTag from "@/app/createTagWindow/createTagWindow";
-import toast, { Toaster } from "react-hot-toast";
-import CommIc from "@/assets/comment.png";
-import CreateComment from "@/app/commentWindow/commentWindow";
-import jwt from "jsonwebtoken";
-import AnonymusImg from "@/assets/anonymous.png";
-import AddPost from "@/app/addPostWIndow/addPostWindow";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { Toaster } from "react-hot-toast";
 import PostList from "@/components/post_posts/PostList";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function PostsWallUndfiend() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -37,9 +20,11 @@ export default function PostsWallUndfiend() {
 
       setPosts((prevPosts) => {
         const existingPostIds = new Set(prevPosts.map((post) => post.post_id));
-        const newUniquePosts = response.data.results.filter(
-          (post: any) => !existingPostIds.has(post.post_id)
-        );
+        const newUniquePosts = response.data.results
+          ? response.data.results.filter(
+              (post: any) => !existingPostIds.has(post.post_id)
+            )
+          : [];
 
         return [...prevPosts, ...newUniquePosts];
       });
@@ -121,6 +106,9 @@ export default function PostsWallUndfiend() {
               style={{ height: "90vh" }}
             >
               <PostList
+                imageClass="image-item"
+                gifClass="gif-item"
+                videoClass="video-item "
                 posts={posts}
                 fetchMorePosts={fetchMorePosts}
                 hasMore={hasMore}

@@ -39,11 +39,9 @@ const PostFooter: React.FC<PostFooterProps> = ({
         />
         <p>Comments: {formatNumber(commentsCount)}</p>
       </div>
-      <Button
-        buttonClassName="cursor-pointer"
-        children="Liked by"
-        onClick={onLikedByClick}
-      />
+      <Button buttonClassName="cursor-pointer" onClick={onLikedByClick}>
+        Liked by
+      </Button>
     </div>
   );
 };

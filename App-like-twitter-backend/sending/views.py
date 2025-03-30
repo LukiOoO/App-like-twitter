@@ -9,11 +9,15 @@ from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+
 import logging
 from celery import shared_task
 from users.models import User
 from .serializers import ResendActivationSerializer
 from users.permissions import IsProfileOwner
+
 
 logging.getLogger(__name__)
 
@@ -54,16 +58,17 @@ def send_activation_email(user_id):
 
 
 class ActivationView(APIView):
-    permission_classes = [IsProfileOwner, IsAuthenticated]
+    permission_classes = []  # Nie wymagamy autoryzacji
 
     def get(self, request, *args, **kwargs):
         try:
-            uid = kwargs.get('uid')
+            uidb64 = kwargs.get('uid')
             token = kwargs.get('token')
-            user_id = request.user.id
+
             try:
-                user = User.objects.get(pk=user_id)
-            except User.DoesNotExist:
+                uid = force_str(urlsafe_base64_decode(uidb64))
+                user = User.objects.get(pk=uid)
+            except (TypeError, ValueError, OverflowError, User.DoesNotExist):
                 raise NotFound('User not found')
 
             if default_token_generator.check_token(user, token):
@@ -71,10 +76,9 @@ class ActivationView(APIView):
                 user.save()
                 return Response({'message': "Account activated"}, status=status.HTTP_200_OK)
             else:
-                return Response({'message': "Invalid token"}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'message': "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response(str(e), status=status.HTTP_403_FORBIDDEN)
-
+            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
 
 class ResendActivationView(APIView):
     serializer_class = ResendActivationSerializer

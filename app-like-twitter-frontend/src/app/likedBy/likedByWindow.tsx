@@ -2,14 +2,14 @@
 
 import "../globals.css";
 import React, { useState } from "react";
+import Button from "@/components/common/Button";
+import { LikedByProps } from "@/types/porps/props";
 
-type Props = {
-  togglePopup: (event: React.MouseEvent<HTMLElement>) => void;
-  likeUsers: any[];
-  postId: number;
-};
-
-export default function LikedBy({ togglePopup, likeUsers, postId }: Props) {
+export default function LikedBy({
+  togglePopup,
+  likeUsers,
+  postId,
+}: LikedByProps) {
   const [searchUsr, setSearchUsr] = useState("");
   const handleSearchUsr = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchUsr(e.target.value);
@@ -51,12 +51,12 @@ export default function LikedBy({ togglePopup, likeUsers, postId }: Props) {
           )}
         </div>
 
-        <button
+        <Button
           onClick={togglePopup}
-          className="mt-4 bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
+          buttonClassName="mt-4 bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
         >
           Close
-        </button>
+        </Button>
       </div>
     </div>
   );

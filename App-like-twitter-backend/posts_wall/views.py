@@ -202,7 +202,10 @@ class ShowUserPosts(viewsets.GenericViewSet):
         else:
             sampled_similar_posts = similar_posts.copy()
             needed = follow_tags_size - len(sampled_similar_posts)
-            additional_similar_qs = Post.objects.filter(tags__tag__in=liked_tags).exclude(user=request.user).exclude(id__in=liked_posts_ids | set(post.id for post in sampled_similar_posts))
+            excluded_ids = set(liked_posts_ids) | {post.id for post in sampled_similar_posts}
+            additional_similar_qs = Post.objects.filter(tags__tag__in=liked_tags)\
+                .exclude(user=request.user)\
+                .exclude(id__in=list(excluded_ids))
             additional_similar_posts = list(additional_similar_qs)
             if additional_similar_posts:
                 additional_sample = sample(additional_similar_posts, min(needed, len(additional_similar_posts)))

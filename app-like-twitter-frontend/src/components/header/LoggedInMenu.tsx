@@ -35,7 +35,6 @@ const LoggedInMenu: React.FC<LoggedInMenuProps> = ({
       </li>
       <NavItem
         onClick={handleNavigation}
-        children={buttonText}
         imageSrc={buttonImage}
         imageAlt={buttonAlt}
         extraClasses="sm:ml-auto hover:bg-somegray transition delay-125"
@@ -43,17 +42,20 @@ const LoggedInMenu: React.FC<LoggedInMenuProps> = ({
         imageHeight={30}
         buttonClassName="flex w-full sm:w-28 h-full items-center justify-center"
         showPopup={false}
-      />
+      >
+        {buttonText}
+      </NavItem>
       <NavItem
         onClick={handleLogout}
-        children="Logout"
         imageSrc={LogOutImg}
         imageAlt="Logout"
         imageWidth={20}
         imageHeight={20}
         buttonClassName="flex w-28  h-full items-center hover:bg-neutral-800 justify-center rounded-lg bg-somegray"
         extraClasses="sm:ml-auto"
-      />
+      >
+        Logout
+      </NavItem>
     </ul>
   );
 };

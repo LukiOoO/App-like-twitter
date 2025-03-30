@@ -20,6 +20,9 @@ const Post: React.FC<PostProps> = ({
   onCommentClick,
   onLikedByClick,
   likedByPopupPostId,
+  imageClass,
+  gifClass,
+  videoClass,
 }) => {
   const userHasLikedPost = currentUserNickname
     ? postObj.likes?.liked_by?.includes(currentUserNickname)
@@ -46,7 +49,7 @@ const Post: React.FC<PostProps> = ({
 
   return (
     <div
-      className={`min-h-[250px] sm:mx-auto sm:w-[80%] xl:w-[60%] bg-gradient-to-r from-lighterDark to-gray-900 p-8 rounded-xl shadow-xl hover:shadow-2xl transform  sm:flex sm:flex-col   min-w-[300px] ${extraPostClasses}`}
+      className={`min-h-[250px] sm:mx-auto sm:w-[80%] xl:w-[60%] bg-gradient-to-r from-lighterDark to-gray-900 p-8 rounded-xl shadow-xl hover:shadow-2xl transform sm:flex sm:flex-col min-w-[300px] ${extraPostClasses}`}
       onClick={() => handlePostClick(postObj.post_id)}
     >
       <PostHeader
@@ -57,6 +60,9 @@ const Post: React.FC<PostProps> = ({
       />
       <div className="flex-grow">
         <PostBody
+          videoClass={videoClass}
+          gifClass={gifClass}
+          imageClass={imageClass}
           text={postObj.text}
           image={postObj.image}
           gif={postObj.gif}
@@ -70,12 +76,8 @@ const Post: React.FC<PostProps> = ({
           e.stopPropagation();
           handleLikeClick(postObj.post_id);
         }}
-        onCommentClick={() => {
-          handleCommentClick(postObj.post_id);
-        }}
-        onLikedByClick={() => {
-          handleLikedByClick(postObj.post_id);
-        }}
+        onCommentClick={() => handleCommentClick(postObj.post_id)}
+        onLikedByClick={() => handleLikedByClick(postObj.post_id)}
         userHasLikedPost={userHasLikedPost}
       />
       {likedByPopupPostId === postObj.post_id && (

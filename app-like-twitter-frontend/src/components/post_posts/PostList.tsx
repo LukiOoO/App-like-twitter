@@ -3,7 +3,7 @@
 import React from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { AnimatePresence, motion } from "framer-motion";
-import Post from "./Post";
+import Post from "@/components/post/Post";
 import { PostListProps } from "@/types/porps/props";
 
 const PostList: React.FC<PostListProps> = ({
@@ -20,6 +20,9 @@ const PostList: React.FC<PostListProps> = ({
   onLikedByClick,
   animationProps,
   likedByPopupPostId,
+  imageClass,
+  gifClass,
+  videoClass,
 }) => {
   return (
     <InfiniteScroll
@@ -43,6 +46,9 @@ const PostList: React.FC<PostListProps> = ({
               .map((postObj) => (
                 <motion.div key={postObj.post_id} {...(animationProps || {})}>
                   <Post
+                    videoClass={videoClass}
+                    gifClass={gifClass}
+                    imageClass={imageClass}
                     extraPostClasses={extraPostClasses}
                     postObj={postObj}
                     currentUserNickname={currentUserNickname}

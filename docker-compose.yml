@@ -1,0 +1,105 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mymysql
+    environment:
+      MYSQL_DATABASE: app_l_tt
+      MYSQL_ROOT_PASSWORD: P@ssword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: myredis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  backend:
+    build:
+      context: ./App-like-twitter-backend
+      dockerfile: dockerfile
+    container_name: mybackend
+    command: ./wait-for-it.sh mysql:3306 -- ./docker-entrypoint.sh
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - redis
+    restart: on-failure
+    volumes:
+      - ./App-like-twitter-backend:/app
+    environment:
+      DEBUG: "1"
+
+  worker:
+    build:
+      context: ./App-like-twitter-backend
+      dockerfile: dockerfile
+    container_name: myworker
+    command: celery -A App_like_twitter_backend worker --loglevel=info
+    depends_on:
+      - redis
+      - mysql
+    volumes:
+      - ./App-like-twitter-backend:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      DEBUG: "1"
+
+  scheduler:
+    build:
+      context: ./App-like-twitter-backend
+      dockerfile: dockerfile
+    container_name: myscheduler
+    command: celery -A App_like_twitter_backend beat --loglevel=info
+    depends_on:
+      - redis
+    volumes:
+      - ./App-like-twitter-backend:/app
+
+  monitor:
+    build:
+      context: ./App-like-twitter-backend
+      dockerfile: dockerfile
+    container_name: mymonitor
+    command: celery -A App_like_twitter_backend flower
+    depends_on:
+      - backend
+      - redis
+      - worker
+    environment:
+      DEBUG: "1"
+      CELERY_BROKER: "redis://redis:6379/0"
+      CELERY_BACKEND: "redis://redis:6379/0"
+    ports:
+      - "5555:5555"
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    container_name: smtp4dev
+    ports:
+      - "5000:80"
+      - "25:25"
+    restart: always
+
+  frontend:
+    build:
+      context: ./app-like-twitter-frontend
+      dockerfile: dockerfile
+    container_name: myfrontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: on-failure
+
+volumes:
+  mysqldata:
+  redisdata:
