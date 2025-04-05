@@ -5,11 +5,11 @@ import { UserPostsProps } from "@/types/porps/props";
 
 const UserPosts: React.FC<UserPostsProps> = ({ posts, onPostClick }) => {
   return (
-    <div>
+    <div className="">
       <span className="text-2xl font-bold text-slate-600 block mb-1 animate-pulse text-center">
         User Posts
       </span>
-      <div>
+      <div className="h-4/5 overflow-auto">
         <PostList
           imageClass="image-item"
           gifClass="gif-item"

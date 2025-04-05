@@ -3,13 +3,17 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import axios from "axios";
 import Cookies from "js-cookie";
-import jwt from "jsonwebtoken";
+
+import "../globals.css";
+
 import PopupContainer from "@/components/loginregister/PopupContainer";
 import FormInput from "@/components/loginregister/FormInput";
 import Button from "@/components/common/Button";
+
 import { PopupProps } from "@/types/porps/props";
+
+import { loginUserApi } from "@/utils/api";
 
 const Login: React.FC<PopupProps> = ({ togglePopup }) => {
   const router = useRouter();
@@ -20,7 +24,7 @@ const Login: React.FC<PopupProps> = ({ togglePopup }) => {
   });
 
   const validateFields = () => {
-    if (userData.nickname !== "" && userData.password !== "") {
+    if (userData.nickname.trim() !== "" && userData.password.trim() !== "") {
       setActiveBtn(true);
     } else {
       setActiveBtn(false);
@@ -29,21 +33,17 @@ const Login: React.FC<PopupProps> = ({ togglePopup }) => {
 
   const loginUser = async () => {
     try {
-      const userTokens = await axios.post(
-        "http://127.0.0.1:8000/u/jwt/create",
-        userData
-      );
-      Cookies.set("access", userTokens.data.access);
-      Cookies.set("refresh", userTokens.data.refresh);
+      const data = await loginUserApi(userData);
+      Cookies.set("access", data.access);
+      Cookies.set("refresh", data.refresh);
       toast.success("Logged in");
       router.push("/logHome");
     } catch (error: any) {
-      console.log(error.message);
+      console.error(error.message);
       if (error.response && error.response.data) {
-        const errors = error.response.data;
-        if (errors.detail) {
-          toast.error(`Something went wrong: ${errors.detail}`);
-        }
+        toast.error(
+          `Something went wrong: ${error.response.data.detail || "Login failed"}`
+        );
       } else {
         toast.error("Something went wrong");
       }
@@ -61,7 +61,7 @@ const Login: React.FC<PopupProps> = ({ togglePopup }) => {
         type="text"
         id="nickname"
         name="nickname"
-        placeholder="email"
+        placeholder="Email or Nickname"
         value={userData.nickname}
         onChange={(e) => setUserData({ ...userData, nickname: e.target.value })}
       />
@@ -69,7 +69,7 @@ const Login: React.FC<PopupProps> = ({ togglePopup }) => {
         type="password"
         id="password"
         name="password"
-        placeholder="password"
+        placeholder="Password"
         value={userData.password}
         onChange={(e) => setUserData({ ...userData, password: e.target.value })}
       />

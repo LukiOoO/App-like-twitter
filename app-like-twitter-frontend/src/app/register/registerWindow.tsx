@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { toast } from "react-hot-toast";
+
 import PopupContainer from "@/components/loginregister/PopupContainer";
 import FormInput from "@/components/loginregister/FormInput";
 import Button from "@/components/common/Button";
+
 import { PopupPropsRegister } from "@/types/porps/props";
+
+import { registerUserAPI } from "@/utils/api";
 
 export default function Register({
   togglePopup,
@@ -24,7 +27,7 @@ export default function Register({
 
   const registerUser = async () => {
     try {
-      await axios.post(`http://127.0.0.1:8000/u/users/`, {
+      await registerUserAPI({
         nickname: userData.nickname,
         email: userData.email,
         password: userData.password1,

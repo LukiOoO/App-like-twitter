@@ -16,10 +16,10 @@ const LoggedOutMenu: React.FC<LoggedOutMenuProps> = ({
   setShowPopupLogin,
   setShowPopupRegister,
 }) => (
-  <ul className="flex flex-col sm:flex-row bg-lighterDark">
+  <ul className="flex flex-col sm:flex-row bg-gray-900 shadow-lg">
     <NavItem
-      extraClasses={"hover:bg-somegray transition delay-125"}
-      buttonClassName="flex w-full sm:w-28 h-full items-center justify-center"
+      extraClasses="hover:bg-gray-800 transition-colors duration-150 rounded-lg"
+      buttonClassName="flex w-full sm:w-28 h-full items-center justify-center text-white"
       onClick={togglePopupLogin}
       imageSrc={LoginImg}
       imageAlt="Login"
@@ -34,8 +34,8 @@ const LoggedOutMenu: React.FC<LoggedOutMenuProps> = ({
       Login
     </NavItem>
     <NavItem
-      extraClasses={"hover:bg-somegray transition delay-125"}
-      buttonClassName="flex w-full sm:w-28 h-full items-center justify-center"
+      extraClasses="hover:bg-gray-800 transition-colors duration-150 rounded-lg"
+      buttonClassName="flex w-full sm:w-28 h-full items-center justify-center text-white"
       onClick={togglePopupRegister}
       imageSrc={RegisterImg}
       imageAlt="Register"

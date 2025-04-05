@@ -1,128 +1,101 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import "../globals.css";
-import axios from "axios";
-import Header from "@/components/header/Header";
+import { useRouter } from "next/navigation";
 import { toast, Toaster } from "react-hot-toast";
 import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
 
+import "../globals.css";
+
+import Header from "@/components/header/Header";
 import UserInfo from "@/components/profile/UserInfo";
 import PostsSection from "@/components/profile/PostSection";
 import SocialSections from "@/components/profile/SocialSections";
 import CommentsSection from "@/components/profile/CommentSection";
 
+import { handleRedirectClick, moveToUserProfile } from "@/utils/redirects";
+import { emptyFunction } from "@/utils/emptyFunction";
+
+import {
+  getUserDataApi,
+  updateUserDataApi,
+  getFollowersApi,
+  getFollowingApi,
+  getUserTagsApi,
+  getUserPostsApi,
+  getUserCommentsApi,
+  sendResetPasswordEmailApi,
+  updateUserAvatarApi,
+} from "@/utils/api";
+
 export default function ProfilePage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState(false);
-  const [isEditedNick, setIsEditedNick] = useState(false);
-  const [isEditedEmail, setIsEditedEmail] = useState(false);
-  const [isFrozenAccount, setIsFrozenAccount] = useState(false);
-  const [isEditingComment, setIsEditingComment] = useState<{
-    editComment: boolean;
-    comment_id: number | null;
-  }>({ editComment: false, comment_id: null });
   const [userData, setUserData] = useState({
     nickname: "",
     email: "",
     avatar: "",
     freeze_or_not: false,
   });
+  const [error, setError] = useState(false);
+  const [isEditedNick, setIsEditedNick] = useState(false);
+  const [isEditedEmail, setIsEditedEmail] = useState(false);
+  const [isFrozenAccount, setIsFrozenAccount] = useState(false);
+  const [email, setEmail] = useState("");
 
-  const togglePopupEditCom = () => {
-    setIsEditingComment({ editComment: false, comment_id: null });
+  const [posts, setPosts] = useState<any[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
+  const [followers, setFollowers] = useState<any[]>([]);
+  const [following, setFollowing] = useState<any[]>([]);
+  const [tags, setTags] = useState<any[]>([]);
+
+  const [isEditingComment, setIsEditingComment] = useState<{
+    editComment: boolean;
+    comment_id: number | null;
+  }>({ editComment: false, comment_id: null });
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTermTag, setSearchTermTag] = useState("");
+  const [searchTermFollowers, setSearchTermFollowers] = useState("");
+
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handlePencilClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
-  const handleRedirectCLik = (postId?: number): void => {
-    router.push(`/post/${postId}`);
-  };
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+    setAvatar(selectedFile);
 
-  const moveToUserProfile = (nickname?: string): void => {
-    router.push(`/userProfile/${nickname}`);
-  };
+    const formData = new FormData();
+    formData.append("avatar", selectedFile);
 
-  const freezeAccount = async (freeze_or_not: boolean) => {
     try {
-      await axios.put(
-        "http://127.0.0.1:8000/u/users/me/",
-        {
-          nickname: userData.nickname,
-          email: userData.email,
-          avatar: userData.avatar,
-          freeze_or_not: freeze_or_not,
-        },
-        { headers: { Authorization: "JWT " + Cookies.get("access") } }
-      );
+      await updateUserAvatarApi(formData);
+      toast.success("Avatar uploaded successfully!");
+      await fetchUserData();
     } catch (error: any) {
-      console.log(error);
+      console.error("Failed to upload avatar:", error);
+      toast.error("Failed to upload avatar.");
     }
   };
 
-  const unFreezeAccount = async () => {
+  const fetchUserData = async () => {
     try {
-      await axios.post(
-        "http://127.0.0.1:8000/u/users/resend_activation/",
-        { email: email },
-        { headers: { Authorization: "JWT " + Cookies.get("access") } }
-      );
-      toast.success("The account unfreezing email has been sent");
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-
-  const changeUserData = async () => {
-    try {
-      await axios.put(
-        "http://127.0.0.1:8000/u/users/me/",
-        {
-          nickname: userData.nickname,
-          email: userData.email,
-          avatar: userData.avatar,
-          freeze_or_not: userData.freeze_or_not,
-        },
-        { headers: { Authorization: "JWT " + Cookies.get("access") } }
-      );
-      toast.success("The data has been changed");
-      await getUserData();
-    } catch (error: any) {
-      if (error.response.data) {
-        const errorString = JSON.stringify(error.response);
-        toast.error(`${errorString.split("string='")[1].split(".")[0]}`);
-        await getUserData();
-      } else {
-        toast.error("Something went wrong");
-      }
-    }
-  };
-
-  const sendResetPasswordEmail = async () => {
-    try {
-      await axios.post("http://127.0.0.1:8000/u/users/reset_password/", {
-        email: userData.email,
-      });
-      toast.success("Password reset email has been sent");
-    } catch (error: any) {
-      toast.error("Something went wrong");
-    }
-  };
-
-  const getUserData = async () => {
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/u/users/me/", {
-        headers: { Authorization: "JWT " + Cookies.get("access") },
-      });
+      const data = await getUserDataApi();
       setUserData({
-        avatar: response.data.avatar,
-        nickname: response.data.nickname,
-        email: response.data.email,
-        freeze_or_not: response.data.freeze_or_not,
+        avatar: data.avatar,
+        nickname: data.nickname,
+        email: data.email,
+        freeze_or_not: data.freeze_or_not,
       });
     } catch (error: any) {
-      console.log(error.response.data);
+      console.error(error.response?.data);
       if (error.response && error.response.status === 403) {
         const responseData = error.response.data;
         const freezeMessage = Object.keys(responseData)[0];
@@ -132,243 +105,179 @@ export default function ProfilePage() {
         }
       } else {
         setError(true);
-        console.log(error.message);
       }
     }
   };
 
+  const changeUserData = async () => {
+    try {
+      await updateUserDataApi(userData);
+      toast.success("The data has been changed");
+      await fetchUserData();
+    } catch (error: any) {
+      if (error.response?.data) {
+        const errorString = JSON.stringify(error.response);
+        toast.error(`${errorString.split("string='")[1].split(".")[0]}`);
+        await fetchUserData();
+      } else {
+        toast.error("Something went wrong");
+      }
+    }
+  };
+
+  const sendResetPasswordEmail = async () => {
+    try {
+      await sendResetPasswordEmailApi(userData.email);
+      toast.success("Password reset email has been sent");
+    } catch (error: any) {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const fetchFollowers = async () => {
+    try {
+      const data = await getFollowersApi();
+      setFollowers(data);
+    } catch (error: any) {}
+  };
+
+  const fetchFollowing = async () => {
+    try {
+      const data = await getFollowingApi();
+      setFollowing(data);
+    } catch (error: any) {}
+  };
+
+  const fetchTags = async () => {
+    try {
+      const data = await getUserTagsApi();
+      setTags(data);
+    } catch (error: any) {}
+  };
+
+  const fetchPosts = async () => {
+    try {
+      if (userData.nickname) {
+        const data = await getUserPostsApi(userData.nickname);
+        setPosts(data);
+      }
+    } catch (error: any) {}
+  };
+
+  const fetchUserComments = async () => {
+    try {
+      const data = await getUserCommentsApi();
+      setComments(data);
+    } catch (error: any) {}
+  };
+
   useEffect(() => {
-    getUserData();
+    fetchUserData();
   }, []);
 
-  const [avatar, setAvatar] = useState(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handlePencilClick = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
-  };
-
-  const handleFileChange = async (event: any) => {
-    const selectedFile = event.target.files[0];
-    if (!selectedFile) return;
-    setAvatar(selectedFile);
-
-    const formData = new FormData();
-    formData.append("avatar", selectedFile);
-
-    try {
-      const response = await axios.put(
-        "http://127.0.0.1:8000/u/user-avatar-update/",
-        formData,
-        {
-          headers: {
-            Authorization: `JWT ${Cookies.get("access")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      if (response.status === 200) {
-        toast.success("Avatar uploaded successfully!");
-        await getUserData();
-      }
-    } catch (error: any) {
-      console.error("Failed to upload avatar:", error);
-      toast.error("Failed to upload avatar.");
-    }
-  };
-
-  const [followsers, setFollowers] = useState<any[]>([]);
-  const [following, setFollowing] = useState<any[]>([]);
-  const getFollower = async () => {
-    try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/u/your-followers/",
-        {
-          headers: { Authorization: `JWT ${Cookies.get("access")}` },
-        }
-      );
-      setFollowers(response.data["Your followers"]);
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-
-  const removeF = async (id: number) => {
-    try {
-      await axios.post(
-        "http://127.0.0.1:8000/u/you-can-unfollow/",
-        { unfollow_user: id },
-        { headers: { Authorization: `JWT ${Cookies.get("access")}` } }
-      );
-      await getFollowing();
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-
-  const getFollowing = async () => {
-    try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/u/you-are-following/",
-        {
-          headers: { Authorization: `JWT ${Cookies.get("access")}` },
-        }
-      );
-      setFollowing(response.data["You are following"]);
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const [tags, setTags] = useState<any[]>([]);
-  const getTags = async () => {
-    try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/t/user-tags-list/",
-        {
-          headers: { Authorization: `JWT ${Cookies.get("access")}` },
-        }
-      );
-      setTags(response.data["Your tags"]);
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-
-  const [searchTermTag, setSearchTermTag] = useState("");
-  const handleSearchTag = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTermTag(e.target.value);
-  };
-
-  const removeT = async (id: number) => {
-    try {
-      await axios.delete(`http://127.0.0.1:8000/t/user-tags-list/${id}/`, {
-        headers: { Authorization: `JWT ${Cookies.get("access")}` },
-      });
-      await getTags();
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-
-  const [searchTermFollowers, setSearchTermFollowers] = useState("");
-  const handleSearchFollowers = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTermFollowers(e.target.value);
-  };
-
-  const [posts, setPosts] = useState<any[]>([]);
-  const getPost = async (nickname: string) => {
-    try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/u/search-user-posts/?user_name=${nickname}`,
-        { headers: { Authorization: `JWT ${Cookies.get("access")}` } }
-      );
-      setPosts(response.data);
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-
   useEffect(() => {
-    if (userData.nickname) getPost(userData.nickname);
+    if (userData.nickname) {
+      fetchPosts();
+    }
   }, [userData.nickname]);
 
-  const [comments, setComments] = useState<any[]>([]);
-  const getUserComments = async () => {
-    try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/u/all-user-comments/",
-        {
-          headers: { Authorization: `JWT ${Cookies.get("access")}` },
-        }
-      );
-      setComments(response.data["Your comments"]);
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-
-  const emptyFunction = () => ({ [1]: [] });
-
   useEffect(() => {
-    getUserComments();
-    getFollower();
-    getFollowing();
-    getTags();
+    fetchUserComments();
+    fetchFollowers();
+    fetchFollowing();
+    fetchTags();
   }, []);
 
+  const onPostClick = (postId?: number): void => {
+    handleRedirectClick(router, postId);
+  };
+
+  const onUsernameClick = (nickname?: string): void => {
+    moveToUserProfile(router, nickname);
+  };
+
   return (
-    <div>
-      <Toaster />
+    <div className="min-h-screen bg-black text-white">
       <Header registerShouldPopup={false} />
-      <div className="flex flex-col sm:flex-row h-screen w-full border-lighterDark border-x-4">
-        <div className="w-full sm:w-2/5 h-auto sm:h-1/2">
-          <UserInfo
-            userData={userData}
-            setUserData={setUserData}
-            isFrozenAccount={isFrozenAccount}
-            isEditedNick={isEditedNick}
-            isEditedEmail={isEditedEmail}
-            setIsEditedNick={setIsEditedNick}
-            setIsEditedEmail={setIsEditedEmail}
-            handlePencilClick={handlePencilClick}
-            fileInputRef={fileInputRef}
-            handleFileChange={handleFileChange}
-            changeUserData={changeUserData}
-            sendResetPasswordEmail={sendResetPasswordEmail}
-            freezeAccount={freezeAccount}
-            unFreezeAccount={unFreezeAccount}
-            email={email}
-          />
-          <SocialSections
-            followers={followsers}
-            following={following}
-            tags={tags}
-            searchTermFollowers={searchTermFollowers}
-            handleSearchFollowers={handleSearchFollowers}
-            searchTerm={searchTerm}
-            handleSearch={handleSearch}
-            searchTermTag={searchTermTag}
-            handleSearchTag={handleSearchTag}
-            removeFollowing={removeF}
-            removeTag={removeT}
-            currentUserNickname={Cookies.get("Nick") || ""}
-          />
-        </div>
-        <div className="mt-72 sm:my-0 w-full sm:w-3/5 border-lighterDark border-l-4">
-          <PostsSection
-            posts={posts}
-            fetchMorePosts={() => {}}
-            hasMore={false}
-            currentUserNickname={userData.nickname}
-            commentsByPost={{}}
-            onUsernameClick={(nickname) =>
-              router.push(`/userProfile/${nickname}`)
-            }
-            onLikeClick={handleRedirectCLik}
-            onCommentClick={handleRedirectCLik}
-            onPostClick={handleRedirectCLik}
-            onLikedByClick={handleRedirectCLik}
-            likedByPopupPostId={null}
-            animationProps={{}}
-            imageClass="image-item"
-            gifClass="gif-item"
-            videoClass="video-item"
-          />
-          <CommentsSection
-            comments={comments}
-            onPostClick={handleRedirectCLik}
-            setIsEditingComment={setIsEditingComment}
-            isEditingComment={isEditingComment}
-            togglePopupEditCom={togglePopupEditCom}
-            handleRedirectCLik={handleRedirectCLik}
-            getUserComments={emptyFunction}
-          />
+      <Toaster />
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-gray-900  p-4 rounded">
+              <UserInfo
+                userData={userData}
+                setUserData={setUserData}
+                isFrozenAccount={isFrozenAccount}
+                isEditedNick={isEditedNick}
+                isEditedEmail={isEditedEmail}
+                setIsEditedNick={setIsEditedNick}
+                setIsEditedEmail={setIsEditedEmail}
+                handlePencilClick={handlePencilClick}
+                fileInputRef={fileInputRef}
+                handleFileChange={handleFileChange}
+                changeUserData={changeUserData}
+                sendResetPasswordEmail={sendResetPasswordEmail}
+                freezeAccount={() => {}}
+                unFreezeAccount={() => {}}
+                email={email}
+              />
+            </div>
+
+            <div className="bg-gray-900  p-4 rounded">
+              <SocialSections
+                followers={followers}
+                following={following}
+                tags={tags}
+                searchTermFollowers={searchTermFollowers}
+                handleSearchFollowers={(e) =>
+                  setSearchTermFollowers(e.target.value)
+                }
+                searchTerm={searchTerm}
+                handleSearch={(e) => setSearchTerm(e.target.value)}
+                searchTermTag={searchTermTag}
+                handleSearchTag={(e) => setSearchTermTag(e.target.value)}
+                removeFollowing={emptyFunction}
+                removeTag={emptyFunction}
+                currentUserNickname={Cookies.get("Nick") || ""}
+              />
+            </div>
+          </div>
+
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="h-4/5 bg-gray-900  p-4 rounded">
+              <PostsSection
+                posts={posts}
+                fetchMorePosts={() => {}}
+                hasMore={false}
+                currentUserNickname={userData.nickname}
+                commentsByPost={{}}
+                onUsernameClick={onUsernameClick}
+                onLikeClick={onPostClick}
+                onCommentClick={onPostClick}
+                onPostClick={onPostClick}
+                onLikedByClick={onPostClick}
+                likedByPopupPostId={null}
+                animationProps={{}}
+                imageClass="image-item"
+                gifClass="gif-item"
+                videoClass="video-item"
+              />
+            </div>
+
+            <div className="h-4/5 bg-gray-900  p-4 rounded">
+              <CommentsSection
+                comments={comments}
+                onPostClick={onPostClick}
+                setIsEditingComment={setIsEditingComment}
+                isEditingComment={isEditingComment}
+                togglePopupEditCom={() =>
+                  setIsEditingComment({ editComment: false, comment_id: null })
+                }
+                handleRedirectCLik={onPostClick}
+                getUserComments={emptyFunction}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

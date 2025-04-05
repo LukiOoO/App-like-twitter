@@ -1,33 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
 import Cookies from "js-cookie";
+import { getUserProfile } from "@/utils/api";
 
 const useAuth = () => {
   const [tokenAvailable, setTokenAvailable] = useState(false);
   const [userNickname, setUserNickname] = useState("");
 
   const tokenInMemoryCheck = () => {
-    if (Cookies.get("access")) {
-      setTokenAvailable(true);
-    } else {
-      setTokenAvailable(false);
-    }
+    setTokenAvailable(!!Cookies.get("access"));
   };
 
-  const getUserNickname = async () => {
+  const fetchUserNickname = async () => {
     try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/u/auth/users/me/",
-        {
-          headers: { Authorization: "JWT " + Cookies.get("access") },
-        }
-      );
-      setUserNickname(response.data.nickname);
-      Cookies.set("Nick", response.data.nickname);
+      const response = await getUserProfile();
+      setUserNickname(response.nickname);
+      Cookies.set("Nick", response.nickname);
     } catch (error: any) {
-      console.log(error.message);
+      console.error(error);
     }
   };
 
@@ -45,7 +36,7 @@ const useAuth = () => {
 
   useEffect(() => {
     if (tokenAvailable) {
-      getUserNickname();
+      fetchUserNickname();
     }
   }, [tokenAvailable]);
 

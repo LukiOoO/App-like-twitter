@@ -17,7 +17,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
         Your comments:
       </span>
       {comments ? (
-        <div className="h-[95%] overflow-y-scroll scrollbar-hide space-y-6">
+        <div className="h-[150%] overflow-y-scroll scrollbar-hide space-y-6">
           {comments
             .slice()
             .reverse()
@@ -40,7 +40,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
                     </div>
                   </div>
                   <p className="text-sm mb-4">{commentObj.text}</p>
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="flex flex-wrap justify-center gap-4 lg:flex-col lg:items-center">
                     {commentObj.image && (
                       <img
                         src={commentObj.image}

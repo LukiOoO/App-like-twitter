@@ -171,6 +171,8 @@ class ShowUserPosts(viewsets.GenericViewSet):
             if post.id not in seen_ids:
                 unique_posts.append(post)
                 seen_ids.add(post.id)
+                
+        unique_posts = list(reversed(unique_posts))
 
         paginated_posts = self.paginate_queryset(unique_posts)
         if paginated_posts is not None:
@@ -254,7 +256,9 @@ class ShowUserPosts(viewsets.GenericViewSet):
             if post.id not in seen_ids:
                 unique_posts.append(post)
                 seen_ids.add(post.id)
-
+                
+        unique_posts = list(reversed(unique_posts))
+                
         paginated_posts = self.paginate_queryset(unique_posts)
         if paginated_posts is not None:
             serializer = self.get_serializer(paginated_posts, many=True)

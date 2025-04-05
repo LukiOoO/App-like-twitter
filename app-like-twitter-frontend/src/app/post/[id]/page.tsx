@@ -2,18 +2,27 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Header from "@/components/header/Header";
-import axios from "axios";
 import Cookies from "js-cookie";
 import toast, { Toaster } from "react-hot-toast";
 import jwt, { JwtPayload } from "jsonwebtoken";
+
+import Header from "@/components/header/Header";
+import Button from "@/components/common/Button";
 import Post from "@/components/post/Post";
 import PostEditForm from "@/components/post_post/PostEditForm";
 import CommentList from "@/components/comments/CommentList";
 import CreateComment from "@/app/commentWindow/commentWindow";
+
 import { PostObj } from "@/types/interfaces/interfaces";
+
 import { emptyFunction } from "@/utils/emptyFunction";
-import Button from "@/components/common/Button";
+import { moveToUserProfile } from "@/utils/redirects";
+
+import {
+  getPostDetailApi,
+  getPostDetailsCommentsApi,
+  followUnfollowApi,
+} from "@/utils/api";
 
 export default function PostDetailsContainer() {
   const router = useRouter();
@@ -31,31 +40,25 @@ export default function PostDetailsContainer() {
 
   const fetchPostDetail = async () => {
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/p_w/post-detail/?post_id=${id}`,
-        { headers: { Authorization: `JWT ${Cookies.get("access")}` } }
-      );
-      if (response.data && response.data.length > 0) {
-        setPost(response.data[0]);
+      const data = await getPostDetailApi(id);
+      if (data && data.length > 0) {
+        setPost(data[0]);
       } else {
         setPost(null);
         toast.error("Post not found.");
       }
     } catch (error: any) {
-      console.log(error);
+      console.error(error);
       toast.error("An error occurred while fetching the post.");
     }
   };
 
   const fetchPostComments = async () => {
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/p_w/show_user_posts/${id}/comments/`,
-        { headers: { Authorization: `JWT ${Cookies.get("access")}` } }
-      );
-      setComments(response.data);
+      const data = await getPostDetailsCommentsApi(id);
+      setComments(data);
     } catch (error: any) {
-      console.log(error);
+      console.error(error);
       toast.error("An error occurred while fetching comments.");
     }
   };
@@ -64,24 +67,16 @@ export default function PostDetailsContainer() {
     setIsEditing((prev) => !prev);
   };
 
-  const moveToUserProfile = (nickname: string) => {
-    router.push(`/userProfile/${nickname}`);
-  };
-
   const followUnFollow = async () => {
     if (!id) {
       toast.error("Invalid post ID.");
       return;
     }
     try {
-      await axios.post(
-        "http://127.0.0.1:8000/p_w/show_user_posts/",
-        { follow_unfollow_post: id },
-        { headers: { Authorization: `JWT ${Cookies.get("access")}` } }
-      );
+      await followUnfollowApi(id);
       await fetchPostDetail();
     } catch (error: any) {
-      console.log(error);
+      console.error(error);
       toast.error("An error occurred while following/unfollowing.");
     }
   };
@@ -108,7 +103,7 @@ export default function PostDetailsContainer() {
       <Toaster />
       <Header registerShouldPopup={false} />
       <div className="flex flex-col sm:flex-row sm:justify-between m-5 space-y-4 sm:space-y-0 sm:space-x-4 h-screen">
-        <div className="w-full sm:w-2/3 flex flex-col">
+        <div className="w-full sm:w-2/3 flex flex-col ">
           {post ? (
             <>
               {!isEditing ? (
@@ -118,12 +113,12 @@ export default function PostDetailsContainer() {
                   onLikeClick={followUnFollow}
                   onCommentClick={togglePopupCreateCom}
                   onLikedByClick={togglePopupLikedBy}
-                  onUsernameClick={() => moveToUserProfile(post.user)}
+                  onUsernameClick={() => moveToUserProfile(router, post.user)}
                   currentUserNickname={nick}
                   likedByPopupPostId={likedByPopupPostId}
-                  imageClass={post.image || ""}
-                  gifClass={post.gif || ""}
-                  videoClass={post.video || ""}
+                  imageClass={"image-item"}
+                  gifClass={"gif-item"}
+                  videoClass={"video-item"}
                   onPostClick={emptyFunction}
                 />
               ) : (
@@ -136,7 +131,7 @@ export default function PostDetailsContainer() {
               {post.user_id === decodedToken?.user_id && (
                 <div className="mb-4 text-center">
                   <Button
-                    buttonClassName="text-gray-300 bg-lighterDark hover:bg-gray-800 px-4 py-2 rounded-lg shadow"
+                    buttonClassName="m-5 text-gray-300 bg-lighterDark hover:bg-gray-800 px-4 py-2 rounded-lg shadow"
                     onClick={toggleEditing}
                   >
                     {isEditing ? "Cancel" : "Edit Post"}
@@ -153,7 +148,7 @@ export default function PostDetailsContainer() {
             {comments && comments.length > 0 ? (
               <CommentList
                 comments={comments}
-                onUsernameClick={moveToUserProfile}
+                onUsernameClick={() => moveToUserProfile}
               />
             ) : (
               <div>No comments found</div>

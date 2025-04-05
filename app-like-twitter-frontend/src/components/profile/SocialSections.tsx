@@ -33,8 +33,8 @@ const SocialSections: React.FC<SocialSectionsProps> = ({
 
   return (
     <>
-      <div className="mt-2 text-center h-1/3 border-lighterDark border-b-4">
-        <div className="flex justify-around">
+      <div className="mt-2 text-center h-40 border-lighterDark border-b-4">
+        <div className="flex justify-around items-center">
           <input
             type="search"
             className="bg-lighterDark rounded-lg w-36 text-center"
@@ -46,7 +46,7 @@ const SocialSections: React.FC<SocialSectionsProps> = ({
             Your followers ({followers.length}):
           </span>
         </div>
-        <ul className="h-5/6 overflow-y-scroll scrollbar-hide flex flex-col">
+        <ul className="h-28 overflow-y-scroll scrollbar-hide flex flex-col">
           {filteredFollowers.length > 0 ? (
             filteredFollowers.map((followerObj: any, index: number) => (
               <li className="flex justify-center m-2" key={index}>
@@ -63,8 +63,8 @@ const SocialSections: React.FC<SocialSectionsProps> = ({
         </ul>
       </div>
 
-      <div className="mt-2 text-center h-1/3 border-lighterDark border-b-4">
-        <div className="flex justify-around">
+      <div className="mt-2 text-center h-40 border-lighterDark border-b-4">
+        <div className="flex justify-around items-center">
           <input
             type="search"
             className="bg-lighterDark rounded-lg w-36 text-center"
@@ -76,7 +76,7 @@ const SocialSections: React.FC<SocialSectionsProps> = ({
             You Follow ({following.length}):
           </span>
         </div>
-        <ul className="h-5/6 overflow-y-scroll scrollbar-hide flex flex-col">
+        <ul className="h-28 overflow-y-scroll scrollbar-hide flex flex-col">
           {filteredFollowing.length > 0 ? (
             filteredFollowing.map((followingObj: any, index: number) => (
               <li className="flex justify-center m-2" key={index}>
@@ -96,8 +96,8 @@ const SocialSections: React.FC<SocialSectionsProps> = ({
         </ul>
       </div>
 
-      <div className="mt-2 text-center h-1/3">
-        <div className="flex justify-around">
+      <div className="mt-2 text-center h-40">
+        <div className="flex justify-around items-center">
           <input
             type="search"
             className="bg-lighterDark rounded-lg w-36 text-center"
@@ -109,7 +109,7 @@ const SocialSections: React.FC<SocialSectionsProps> = ({
             Your Tags ({Array.isArray(tags) ? tags.length : 0}):
           </span>
         </div>
-        <ul className="h-[70%] overflow-y-scroll scrollbar-hide flex flex-col">
+        <ul className="h-28 overflow-y-scroll scrollbar-hide flex flex-col">
           {filteredTags.length > 0 ? (
             filteredTags.map((tagObj: any, index: number) => (
               <li className="flex justify-center m-2" key={index}>

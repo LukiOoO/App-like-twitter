@@ -1,30 +1,32 @@
 "use client";
 
-import "../globals.css";
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { FindTagProps } from "@/types/porps/props";
+
+import "../globals.css";
+
 import Button from "@/components/common/Button";
 
+import { FindTagProps } from "@/types/porps/props";
+
+import { getTagsApi } from "@/utils/api";
+
 export default function FindTags({ togglePopup, onTagClick }: FindTagProps) {
-  const [tags, setTags] = useState([]);
+  const [tags, setTags] = useState<any[]>([]);
   const [searchTags, setSearchTags] = useState("");
+
   const handleSearchTags = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTags(e.target.value.toUpperCase());
   };
 
-  const getTags = async () => {
+  const fetchTags = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/t/all-tags/");
-      setTags(response.data);
-    } catch (error: any) {
-      console.log(error);
-    }
+      const data = await getTagsApi();
+      setTags(data);
+    } catch (error: any) {}
   };
-  console.log(tags);
 
   useEffect(() => {
-    getTags();
+    fetchTags();
   }, []);
 
   return (
@@ -52,7 +54,7 @@ export default function FindTags({ togglePopup, onTagClick }: FindTagProps) {
                 <p
                   onClick={() => onTagClick(tagObj.tag)}
                   key={index}
-                  className="text-white bg-lightDark p-2 rounded-lg mb-2 hover:bg-slate-600 transition-colors"
+                  className="text-white bg-lightDark p-2 rounded-lg mb-2 hover:bg-slate-600 transition-colors cursor-pointer"
                 >
                   {tagObj.tag}
                 </p>

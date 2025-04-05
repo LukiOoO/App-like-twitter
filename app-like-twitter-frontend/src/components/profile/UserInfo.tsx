@@ -44,7 +44,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col items-center border-lighterDark border-b-4">
+    <div className="w-full flex flex-col items-center ">
       {!isFrozenAccount ? (
         <>
           <p className="p-5 flex items-center">

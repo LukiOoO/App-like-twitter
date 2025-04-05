@@ -1,12 +1,15 @@
 "use client";
 
-import "../globals.css";
 import React, { useState } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
 import { toast } from "react-hot-toast";
+
+import "../globals.css";
+
 import { CreateTagProps } from "@/types/porps/props";
+
 import Button from "@/components/common/Button";
+
+import { createTagApi } from "@/utils/api";
 
 export default function CreateTag({
   togglePopup,
@@ -16,29 +19,20 @@ export default function CreateTag({
   const [newTag, setNewTag] = useState({
     tag: "",
   });
+
   const createTag = async () => {
     try {
-      const request = await axios.post(
-        "http://127.0.0.1:8000/t/user-tags-list/",
-        { tag: newTag.tag },
-        {
-          headers: {
-            Authorization: `JWT  ${Cookies.get("access")}`,
-          },
-        }
-      );
+      await createTagApi(newTag.tag);
       setShowCreatedTagPopup(false);
       toast.success(`The #${newTag.tag.toUpperCase()} tag was created`);
     } catch (error: any) {
-      if (error.response.data) {
+      if (error.response?.data) {
         toast.error(`${error.response.data}`);
       } else {
         toast.error("Something went wrong");
       }
-      console.log(error);
     }
   };
-  console.log(newTag);
 
   return (
     <div
@@ -57,11 +51,12 @@ export default function CreateTag({
         />
         <Button
           onClick={() => {
-            createTag(), jusCreatedTag(newTag.tag);
+            createTag();
+            jusCreatedTag(newTag.tag);
           }}
           buttonClassName="mt-4 bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
         >
-          Subbmit
+          Submit
         </Button>
         <Button
           onClick={togglePopup}

@@ -20,11 +20,11 @@ const PostsSection: React.FC<PostsSectionProps> = ({
   videoClass,
 }) => {
   return (
-    <div className="h-2/6 sm:h-1/2 text-center border-lighterDark border-b-4 p-4">
+    <div className="h-3/6 sm:h-1/2 text-center  p-4">
       <span className="text-2xl font-bold text-slate-600 block mb-1 animate-pulse">
         Your posts:
       </span>
-      <div className="h-[95%] overflow-y-scroll scrollbar-hide space-y-6">
+      <div className="h-[150%] overflow-y-scroll scrollbar-hide space-y-6">
         <PostList
           posts={posts}
           fetchMorePosts={fetchMorePosts}

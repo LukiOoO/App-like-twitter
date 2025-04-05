@@ -1,8 +1,11 @@
 "use client";
 
-import "../globals.css";
 import React, { useState } from "react";
+
+import "../globals.css";
+
 import Button from "@/components/common/Button";
+
 import { LikedByProps } from "@/types/porps/props";
 
 export default function LikedBy({

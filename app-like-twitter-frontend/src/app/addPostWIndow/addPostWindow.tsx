@@ -1,44 +1,32 @@
 "use client";
 
-import "../globals.css";
 import React, { useState, useRef } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
 import { toast, Toaster } from "react-hot-toast";
+
+import "../globals.css";
+
 import Button from "@/components/common/Button";
 import MediaUploads, { MediaConfig } from "@/components/common/MediaUploads";
+import TagManager from "@/components/post_post/TagManager";
+
 import FindTags from "@/app/findTagsWindow/findTagsWindow";
 import CreateTag from "@/app/createTagWindow/createTagWindow";
-import TagManager from "@/components/post_post/TagManager";
+
+import { useMediaUpload } from "@/hooks/useMediaHandling";
+
 import { AddPostProps } from "@/types/porps/props";
+
+import { createPostApi } from "@/utils/api";
 
 export default function AddPost({
   togglePopup,
   setCreatePostWinPopup,
 }: AddPostProps) {
+  const { newFileUrls, newPostContent, setNewPostContent, handleFileChange } =
+    useMediaUpload();
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showFindTags, setShowFindTags] = useState(false);
   const [showCreatedTagPopup, setShowCreatedTagPopup] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [newPostContent, setNewPostContent] = useState<{
-    text: string;
-    image: string | File | null;
-    video: string | File | null;
-    gif: string | File | null;
-  }>({
-    text: "",
-    image: null,
-    video: null,
-    gif: null,
-  });
-  const [newFileUrls, setNewFileUrls] = useState<{
-    image: string | null;
-    video: string | null;
-    gif: string | null;
-  }>({
-    image: null,
-    video: null,
-    gif: null,
-  });
 
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
@@ -53,53 +41,33 @@ export default function AddPost({
     formData.append("video", newPostContent.video ? newPostContent.video : "");
 
     try {
-      await axios.post(
-        "http://127.0.0.1:8000/p_w/user-post-manager/",
-        formData,
-        {
-          headers: {
-            Authorization: `JWT ${Cookies.get("access")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await createPostApi(formData);
       toast.success("The post was created");
       setCreatePostWinPopup(false);
     } catch (error: any) {
       if (error.response?.data) {
-        toast.error("post must contain the tag and text");
+        toast.error("Post must contain the tag and text");
       } else {
         toast.error("Something went wrong");
       }
     }
   };
-
-  const handleFileChange = (
-    type: "image" | "video" | "gif",
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile) return;
-    const fileUrl = URL.createObjectURL(selectedFile);
-    setNewFileUrls((prev) => ({ ...prev, [type]: fileUrl }));
-    setNewPostContent((prev) => ({ ...prev, [type]: selectedFile }));
-  };
-
   const handleTagClick = (tag: string) => {
     if (!selectedTags.includes(tag)) {
       setSelectedTags([...selectedTags, tag]);
     }
   };
+
   const handleRemoveTag = (tag: string) => {
     setSelectedTags(selectedTags.filter((t) => t !== tag));
   };
+
   const handleCreateTag = (tag: string) => {
     setSelectedTags([...selectedTags, `#${tag.toUpperCase()}`]);
   };
 
-  const togglePopupFindTags = () => setShowFindTags(!showFindTags);
-  const togglePopupCreatedTag = () =>
-    setShowCreatedTagPopup(!showCreatedTagPopup);
+  const togglePopupFindTags = () => setShowFindTags((prev) => !prev);
+  const togglePopupCreatedTag = () => setShowCreatedTagPopup((prev) => !prev);
 
   const mediaConfigs: MediaConfig[] = [
     {
@@ -108,10 +76,9 @@ export default function AddPost({
       fileUrl: newFileUrls.image,
       inputAccept: "image/*",
       inputRef: imageInputRef,
-      onEdit: () => imageInputRef.current && imageInputRef.current.click(),
+      onEdit: () => imageInputRef.current?.click(),
       onRemove: () => {
         setNewPostContent((prev) => ({ ...prev, image: null }));
-        setNewFileUrls((prev) => ({ ...prev, image: null }));
       },
       onFileChange: (e) => handleFileChange("image", e),
     },
@@ -121,10 +88,9 @@ export default function AddPost({
       fileUrl: newFileUrls.gif,
       inputAccept: "image/gif",
       inputRef: gifInputRef,
-      onEdit: () => gifInputRef.current && gifInputRef.current.click(),
+      onEdit: () => gifInputRef.current?.click(),
       onRemove: () => {
         setNewPostContent((prev) => ({ ...prev, gif: null }));
-        setNewFileUrls((prev) => ({ ...prev, gif: null }));
       },
       onFileChange: (e) => handleFileChange("gif", e),
     },
@@ -134,10 +100,9 @@ export default function AddPost({
       fileUrl: newFileUrls.video,
       inputAccept: "video/*",
       inputRef: videoInputRef,
-      onEdit: () => videoInputRef.current && videoInputRef.current.click(),
+      onEdit: () => videoInputRef.current?.click(),
       onRemove: () => {
         setNewPostContent((prev) => ({ ...prev, video: null }));
-        setNewFileUrls((prev) => ({ ...prev, video: null }));
       },
       onFileChange: (e) => handleFileChange("video", e),
     },

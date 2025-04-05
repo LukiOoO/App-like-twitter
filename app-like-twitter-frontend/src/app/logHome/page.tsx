@@ -1,175 +1,108 @@
 "use client";
 
-import "../globals.css";
-import Header from "@/components/header/Header";
-import axios from "axios";
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+
+import "../globals.css";
+
+import Header from "@/components/header/Header";
 import AddPost from "@/app/addPostWIndow/addPostWindow";
 import PostList from "@/components/post_posts/PostList";
 import Button from "@/components/common/Button";
 
+import {
+  getPostsApi,
+  getPostCommentsApi,
+  searchPostsOrUsersApi,
+  likePostApi,
+} from "@/utils/api";
+
+import { handleRedirectClick, moveToUserProfile } from "@/utils/redirects";
+
 export default function PostsWall() {
   const router = useRouter();
-  const [isVisible, setIsVisible] = useState(true);
+  const currentUserNickname = Cookies.get("Nick");
 
   const [posts, setPosts] = useState<any[]>([]);
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [isCreatedPostWinPopup, setCreatePostWinPopup] = useState(false);
-  const currentUserNickname = Cookies.get("Nick");
+  const [likedByPopupPostId, setLikedByPopupPostId] = useState<number | null>(
+    null
+  );
+
+  const [isVisible, setIsVisible] = useState(true);
   const [searchWindow, setSearchWindow] = useState({ text: "" });
-  const [likedByPopupPostId, setLikedByPopupPostId] = useState<
-    number | null | undefined
-  >(null);
-
   const [isSearching, setIsSearching] = useState(false);
+  const [postByTag, setPostByTag] = useState<any[]>([]);
+  const [nextPagePostBytag, setNextPagePostBytag] = useState<string | null>(
+    null
+  );
+  const [hasMorePostBytag, setHasMorePostBytag] = useState<boolean>(true);
 
-  const togglePopupLikedBy = (postId?: number | null): void => {
-    setLikedByPopupPostId(postId);
-  };
-  const togglePopupCreate = () => {
-    setCreatePostWinPopup(!isCreatedPostWinPopup);
-  };
+  const [commentsByPost, setCommentsByPost] = useState<{
+    [key: number]: any[];
+  }>({});
 
-  const handleSearchClick = () => {
-    setIsVisible(!isVisible);
-    setIsSearching(!isSearching);
-  };
-  const handleCancalClik = () => {
-    setIsSearching(!isSearching);
-    setPostByTag([]);
-  };
-
-  const getPosts = async (
-    url: string = "http://127.0.0.1:8000/p_w/show_user_posts/"
-  ) => {
+  const fetchPosts = async (url?: string) => {
     try {
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `JWT ${Cookies.get("access")}`,
-        },
-      });
-
+      const data = await getPostsApi(url);
       setPosts((prevPosts) => {
         const existingPostIds = new Set(prevPosts.map((post) => post.post_id));
-        const newUniquePosts = (response.data.results || []).filter(
+        const newUniquePosts = (data.results || []).filter(
           (post: any) => !existingPostIds.has(post.post_id)
         );
-
         return [...prevPosts, ...newUniquePosts];
       });
-
-      setNextPage(response.data.next);
-
-      if (!response.data.next) {
-        setHasMore(false);
-      }
+      setNextPage(data.next);
+      if (!data.next) setHasMore(false);
     } catch (error: any) {
       console.error("Error fetching posts:", error);
       setHasMore(false);
     }
   };
 
-  const getPostComments = async (post_id: number): Promise<any[]> => {
-    try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/p_w/show_user_posts/${post_id}/comments/`,
-        {
-          headers: {
-            Authorization: `JWT  ${Cookies.get("access")}`,
-          },
-        }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      console.log(error);
-      return [];
-    }
-  };
-  const [commentsByPost, setCommentsByPost] = useState<{
-    [key: number]: any[];
-  }>({});
-
   useEffect(() => {
     const fetchComments = async () => {
       const commentsMap: { [key: number]: any[] } = {};
-
       await Promise.all(
         posts.map(async (postObj: any) => {
-          const comments = await getPostComments(postObj.post_id);
+          const comments = await getPostCommentsApi(postObj.post_id);
           commentsMap[postObj.post_id] = comments;
         })
       );
       setCommentsByPost(commentsMap);
     };
-    if (posts.length > 0) {
-      fetchComments();
-    }
+    if (posts.length > 0) fetchComments();
   }, [posts]);
-  console.log(posts);
 
   useEffect(() => {
-    getPosts();
+    fetchPosts();
   }, []);
 
   const fetchMorePosts = () => {
-    if (nextPage) {
-      getPosts(nextPage);
-    }
+    if (nextPage) fetchPosts(nextPage);
   };
 
-  const moveToUserProfile = (nickname?: string): void => {
-    router.push(`/userProfile/${nickname}`);
-  };
-  const handleRedirectClick = (postId?: number): void => {
-    router.push(`/post/${postId}`);
-  };
-
-  console.log(searchWindow.text);
-
-  const [postByTag, setPostByTag] = useState<any[]>([]);
-  const [nextPagePostBytag, setNextPagePostBytag] = useState<string | null>(
-    null
-  );
-  const [hasMorePostBytag, setHasMorePostBytag] = useState<boolean>(true);
   const searchPosByTagOrUser = async (url?: string) => {
-    const isUser = !searchWindow.text.startsWith("#");
-
-    const constructedUrl =
-      url ||
-      (isUser
-        ? `http://127.0.0.1:8000/u/search-user-profile/?user_name=${searchWindow.text}`
-        : `http://127.0.0.1:8000/p_w/search-post-by-tags/?tag_name=${encodeURIComponent(searchWindow.text.toUpperCase())}`);
     try {
-      const response = await axios.get(constructedUrl, {
-        headers: {
-          Authorization: `JWT ${Cookies.get("access")}`,
-        },
-      });
-
+      const { isUser, data } = await searchPostsOrUsersApi(searchWindow.text);
       if (isUser) {
-        moveToUserProfile(response.data.nickname);
+        moveToUserProfile(data.nickname);
       } else {
         setPostByTag((prevPosts) => {
           const existingPostIds = new Set(
             prevPosts.map((post) => post.post_id)
           );
-          const newUniquePosts = response.data.results.filter(
+          const newUniquePosts = data.results.filter(
             (post: any) => !existingPostIds.has(post.post_id)
           );
-
           return [...prevPosts, ...newUniquePosts];
         });
-
-        setNextPagePostBytag(response.data.next);
-
-        if (!response.data.next) {
-          setHasMorePostBytag(false);
-        }
+        setNextPagePostBytag(data.next);
+        if (!data.next) setHasMorePostBytag(false);
         setIsVisible(true);
       }
     } catch (error: any) {
@@ -177,13 +110,60 @@ export default function PostsWall() {
       setHasMorePostBytag(false);
     }
   };
+
   const fetchMorePostsByTag = () => {
-    if (nextPagePostBytag) {
-      searchPosByTagOrUser(nextPagePostBytag);
+    if (nextPagePostBytag) searchPosByTagOrUser(nextPagePostBytag);
+  };
+
+  const handleLike = async (post_id?: number) => {
+    try {
+      const response = await likePostApi(post_id!);
+      const action = response.detail;
+      const updatePosts = (postsList: any[]) =>
+        postsList.map((post) => {
+          if (post.post_id === post_id) {
+            let updatedLikedBy = post.likes?.liked_by || [];
+            let updatedCount = post.likes?.count || 0;
+            if (action === "Follow post successfuly") {
+              if (!updatedLikedBy.includes(currentUserNickname)) {
+                updatedLikedBy = [...updatedLikedBy, currentUserNickname];
+                updatedCount += 1;
+              }
+            } else if (action === "Unfollowed post successfuly") {
+              if (updatedLikedBy.includes(currentUserNickname)) {
+                updatedLikedBy = updatedLikedBy.filter(
+                  (nick: string) => nick !== currentUserNickname
+                );
+                updatedCount -= 1;
+              }
+            }
+            return {
+              ...post,
+              likes: { liked_by: updatedLikedBy, count: updatedCount },
+            };
+          }
+          return post;
+        });
+      setPosts((prev) => updatePosts(prev));
+      setPostByTag((prev) => updatePosts(prev));
+    } catch (error) {
+      console.error("Error liking/unliking post:", error);
     }
   };
 
-  console.log("postByTag", postByTag);
+  const handleLikeForPostBytags = async (post_id?: number) => {
+    await handleLike(post_id);
+  };
+
+  const handleSearchClick = () => {
+    setIsVisible((prev) => !prev);
+    setIsSearching((prev) => !prev);
+  };
+
+  const handleCancalClik = () => {
+    setIsSearching(false);
+    setPostByTag([]);
+  };
 
   const animationProps = {
     initial: { opacity: 0, x: -100 },
@@ -192,97 +172,12 @@ export default function PostsWall() {
     transition: { duration: 0.5, ease: "easeInOut" },
   };
 
-  const handleLike = async (post_id?: number) => {
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/p_w/show_user_posts/",
-        { follow_unfollow_post: post_id },
-        {
-          headers: { Authorization: `JWT ${Cookies.get("access")}` },
-        }
-      );
-
-      console.log("Response from like/unlike:", response.data);
-
-      const action = response.data.detail;
-
-      setPosts((prevPosts) =>
-        prevPosts.map((post) => {
-          if (post.post_id === post_id) {
-            let updatedLikedBy = post.likes?.liked_by || [];
-            let updatedCount = post.likes?.count || 0;
-
-            if (action === "Follow post successfuly") {
-              if (!updatedLikedBy.includes(currentUserNickname)) {
-                updatedLikedBy = [...updatedLikedBy, currentUserNickname];
-                updatedCount += 1;
-              }
-            } else if (action === "Unfollowed post successfuly") {
-              if (updatedLikedBy.includes(currentUserNickname)) {
-                updatedLikedBy = updatedLikedBy.filter(
-                  (nick: string) => nick !== currentUserNickname
-                );
-                updatedCount -= 1;
-              }
-            }
-
-            return {
-              ...post,
-              likes: {
-                liked_by: updatedLikedBy,
-                count: updatedCount,
-              },
-            };
-          } else {
-            return post;
-          }
-        })
-      );
-      setPostByTag((prevPosts) =>
-        prevPosts.map((post) => {
-          if (post.post_id === post_id) {
-            let updatedLikedBy = post.likes?.liked_by || [];
-            let updatedCount = post.likes?.count || 0;
-
-            if (action === "Follow post successfuly") {
-              if (!updatedLikedBy.includes(currentUserNickname)) {
-                updatedLikedBy = [...updatedLikedBy, currentUserNickname];
-                updatedCount += 1;
-              }
-            } else if (action === "Unfollowed post successfuly") {
-              if (updatedLikedBy.includes(currentUserNickname)) {
-                updatedLikedBy = updatedLikedBy.filter(
-                  (nick: string) => nick !== currentUserNickname
-                );
-                updatedCount -= 1;
-              }
-            }
-
-            return {
-              ...post,
-              likes: {
-                liked_by: updatedLikedBy,
-                count: updatedCount,
-              },
-            };
-          } else {
-            return post;
-          }
-        })
-      );
-    } catch (error) {
-      console.error("Error liking/unliking post:", error);
-    }
-  };
-  const handleLikeForPostBytags = async (post_id?: number) => {
-    await handleLike(post_id);
-  };
   return (
     <div>
       <Toaster />
       <Header registerShouldPopup={false} />
       <div className="flex flex-col sm:flex-row ">
-        <div className="w-full sm:w-4/5 flex h-screen border-x-4 border-lighterDark">
+        <div className="w-full sm:w-4/5 flex h-screen border-x-4 border-gray-900">
           <div className="w-4/5 mx-auto flex justify-center mt-5 sm:mt-5">
             <div
               id="scrollableDiv"
@@ -292,7 +187,7 @@ export default function PostsWall() {
               <PostList
                 imageClass="image-item"
                 gifClass="gif-item"
-                videoClass="video-item "
+                videoClass="video-item"
                 posts={isSearching ? postByTag : posts}
                 fetchMorePosts={
                   isSearching ? fetchMorePostsByTag : fetchMorePosts
@@ -300,10 +195,14 @@ export default function PostsWall() {
                 hasMore={isSearching ? hasMorePostBytag : hasMore}
                 currentUserNickname={currentUserNickname}
                 commentsByPost={commentsByPost}
-                onUsernameClick={moveToUserProfile}
-                onCommentClick={handleRedirectClick}
+                onUsernameClick={(nickname) =>
+                  moveToUserProfile(router, nickname)
+                }
+                onCommentClick={(postId) => handleRedirectClick(router, postId)}
                 onLikeClick={isSearching ? handleLikeForPostBytags : handleLike}
-                onLikedByClick={togglePopupLikedBy}
+                onLikedByClick={(postId) =>
+                  setLikedByPopupPostId(postId ?? null)
+                }
                 likedByPopupPostId={likedByPopupPostId}
                 animationProps={animationProps}
                 onPostClick={() => {}}
@@ -311,7 +210,7 @@ export default function PostsWall() {
             </div>
           </div>
         </div>
-        <div className="w-full sm:w-1/5 h-screen text-center border-lighterDark border-r-4">
+        <div className="w-full sm:w-1/5 h-screen text-center border-gray-900 border-r-4">
           <div className="p-4">
             <h2 className="font-semibold mb-2">Search:</h2>
             <div className="relative mb-4">
@@ -320,10 +219,7 @@ export default function PostsWall() {
                 placeholder="Type tag/user"
                 className="w-full p-2 pl-10 bg-lighterDark text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
                 onChange={(e) =>
-                  setSearchWindow({
-                    ...searchWindow,
-                    text: e.target.value,
-                  })
+                  setSearchWindow({ ...searchWindow, text: e.target.value })
                 }
               />
               <svg
@@ -333,7 +229,8 @@ export default function PostsWall() {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 onClick={() => {
-                  handleSearchClick(), searchPosByTagOrUser();
+                  handleSearchClick();
+                  searchPosByTagOrUser();
                   if (isSearching) {
                     handleCancalClik();
                   }
@@ -352,20 +249,20 @@ export default function PostsWall() {
                   onClick={handleCancalClik}
                   buttonClassName="text-gray-300 bg-lighterDark hover:bg-gray-800 px-4 py-2 rounded-lg shadow m-3"
                 >
-                  Cacael
+                  Cancel
                 </Button>
               )}
             </div>
 
             <Button
-              onClick={togglePopupCreate}
+              onClick={() => setCreatePostWinPopup((prev) => !prev)}
               buttonClassName="text-gray-300 bg-lighterDark hover:bg-gray-800 px-4 py-2 rounded-lg shadow"
             >
               Add post
             </Button>
             {isCreatedPostWinPopup && (
               <AddPost
-                togglePopup={togglePopupCreate}
+                togglePopup={() => setCreatePostWinPopup((prev) => !prev)}
                 setCreatePostWinPopup={setCreatePostWinPopup}
               />
             )}

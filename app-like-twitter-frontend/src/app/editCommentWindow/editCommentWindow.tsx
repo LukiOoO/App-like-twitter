@@ -1,13 +1,16 @@
 "use client";
 
-import "../globals.css";
-import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
+import React, { useState, useEffect, useRef, ChangeEvent } from "react";
 import { toast } from "react-hot-toast";
+
+import "../globals.css";
+
 import Button from "@/components/common/Button";
 import MediaUploads, { MediaConfig } from "@/components/common/MediaUploads";
+
 import { EditCommentWindowProps } from "@/types/porps/props";
+
+import { editCommentApi, deleteCommentApi } from "@/utils/api";
 
 export default function EditCommentWindow({
   togglePopup,
@@ -57,7 +60,7 @@ export default function EditCommentWindow({
 
   const handleFileChange = (
     type: "image" | "video" | "gif",
-    event: React.ChangeEvent<HTMLInputElement>
+    event: ChangeEvent<HTMLInputElement>
   ) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
@@ -77,7 +80,6 @@ export default function EditCommentWindow({
         formData.append("image", "");
       }
     }
-
     if (commentObj.gif !== newCommentContent.gif) {
       if (newCommentContent.gif instanceof File) {
         formData.append("gif", newCommentContent.gif);
@@ -85,7 +87,6 @@ export default function EditCommentWindow({
         formData.append("gif", "");
       }
     }
-
     if (commentObj.video !== newCommentContent.video) {
       if (newCommentContent.video instanceof File) {
         formData.append("video", newCommentContent.video);
@@ -95,15 +96,10 @@ export default function EditCommentWindow({
     }
 
     try {
-      await axios.put(
-        `http://127.0.0.1:8000/p_w/show_user_posts/${commentObj.post_id}/comments/${commentObj.id}/`,
-        formData,
-        {
-          headers: {
-            Authorization: `JWT ${Cookies.get("access")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
+      await editCommentApi(
+        `${commentObj.post_id}`,
+        `${commentObj.id}`,
+        formData
       );
       await getUserComments();
       setIsEditingComment({ editComment: false, comment_id: null });
@@ -129,15 +125,12 @@ export default function EditCommentWindow({
 
   const deleteComment = async () => {
     try {
-      await axios.delete(
-        `http://127.0.0.1:8000/p_w/show_user_posts/${commentObj.post_id}/comments/${commentObj.id}/`,
-        { headers: { Authorization: `JWT ${Cookies.get("access")}` } }
-      );
+      await deleteCommentApi(`${commentObj.post_id}`, `${commentObj.id}`);
       toast.success("The comment has been deleted");
       await getUserComments();
       setIsEditingComment({ editComment: false, comment_id: null });
     } catch (error: any) {
-      console.log(error);
+      toast.error("Something went wrong while deleting the comment");
     }
   };
 

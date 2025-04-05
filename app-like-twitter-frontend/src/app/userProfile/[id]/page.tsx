@@ -2,15 +2,19 @@
 
 import "../../globals.css";
 import Header from "@/components/header/Header";
-import axios from "axios";
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 import jwt from "jsonwebtoken";
 import UserData from "@/components/user_profile/UserData";
 import UserComments from "@/components/user_profile/UserComments";
 import UserPosts from "@/components/user_profile/UserPosts";
+import {
+  getUserDataAPI,
+  getUserPostsAPI,
+  getUserCommentsAPI,
+  followUnFollowUserAPI,
+} from "@/utils/api";
 
 export default function UserProfile() {
   const router = useRouter();
@@ -35,85 +39,53 @@ export default function UserProfile() {
   const pathname = usePathname();
   const nickname = pathname.split("/")[2];
 
-  const getUserData = async () => {
+  const fetchUserData = async () => {
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/u/search-user-profile/?user_name=${nickname}`,
-        {
-          headers: { Authorization: `JWT ${Cookies.get("access")}` },
-        }
-      );
-      const filteredFollowers = response.data.user_followers.filter(
-        (followerId: number) => followerId !== response.data.id
+      const data = await getUserDataAPI(nickname);
+      const filteredFollowers = data.user_followers.filter(
+        (followerId: number) => followerId !== data.id
       );
       setUserData({
-        id: response.data.id,
-        avatar: response.data.avatar,
-        nickname: response.data.nickname,
-        email: response.data.email,
-        freeze_or_not: response.data.freeze_or_not,
+        id: data.id,
+        avatar: data.avatar,
+        nickname: data.nickname,
+        email: data.email,
+        freeze_or_not: data.freeze_or_not,
         followersCount: filteredFollowers.length || 0,
-        followingCount: response.data.following.length || 0,
-        followers: response.data.user_followers,
-        following: response.data.following,
-        last_login: response.data.last_login,
+        followingCount: data.following.length || 0,
+        followers: data.user_followers,
+        following: data.following,
+        last_login: data.last_login,
       });
-      setIsFrozenAccount(response.data.freeze_or_not);
-    } catch (error: any) {
-      console.log(error);
-    }
+      setIsFrozenAccount(data.freeze_or_not);
+    } catch (error: any) {}
   };
 
-  const getUserPosts = async () => {
+  const fetchUserPosts = async () => {
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/u/search-user-posts/?user_name=${nickname}`,
-        {
-          headers: { Authorization: `JWT ${Cookies.get("access")}` },
-        }
-      );
-      setPosts(response.data);
-    } catch (error: any) {
-      console.log(error);
-    }
+      const postsData = await getUserPostsAPI(nickname);
+      setPosts(postsData);
+    } catch (error: any) {}
   };
 
-  const getUserComments = async () => {
+  const fetchUserComments = async () => {
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/c/show-user-comments/?user_nickname=${nickname}`,
-        {
-          headers: { Authorization: `JWT ${Cookies.get("access")}` },
-        }
-      );
-      setUserComments(response.data["User comments"]);
-    } catch (error: any) {
-      console.log(error);
-    }
+      const commentsData = await getUserCommentsAPI(nickname);
+      setUserComments(commentsData["User comments"]);
+    } catch (error: any) {}
   };
 
-  const followUnFollowUser = async () => {
+  const handleFollowToggle = async () => {
     try {
-      const endpoint = canUserFollowOrNot
-        ? "http://127.0.0.1:8000/u/you-can-follow/"
-        : "http://127.0.0.1:8000/u/you-can-unfollow/";
-      await axios.post(
-        endpoint,
-        canUserFollowOrNot
-          ? { follow_user: userData.id }
-          : { unfollow_user: userData.id },
-        { headers: { Authorization: `JWT ${Cookies.get("access")}` } }
-      );
-      await getUserData();
-    } catch (error: any) {
-      console.log(error);
-    }
+      await followUnFollowUserAPI(userData.id, canUserFollowOrNot);
+      await fetchUserData();
+    } catch (error: any) {}
   };
 
   useEffect(() => {
-    getUserPosts();
-    getUserComments();
-    getUserData();
+    fetchUserPosts();
+    fetchUserComments();
+    fetchUserData();
   }, []);
 
   useEffect(() => {
@@ -140,9 +112,8 @@ export default function UserProfile() {
             isFrozenAccount={isFrozenAccount}
             isAuthor={isAuthor}
             canUserFollowOrNot={canUserFollowOrNot}
-            onFollowToggle={followUnFollowUser}
+            onFollowToggle={handleFollowToggle}
           />
-
           <UserComments
             userComments={userComments}
             onRedirectClick={handleRedirectClick}

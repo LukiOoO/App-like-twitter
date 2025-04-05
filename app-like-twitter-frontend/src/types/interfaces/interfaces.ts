@@ -46,3 +46,9 @@ export interface CommentType {
   video: string | null;
   post_id: number;
 }
+
+export interface RegisterPayload {
+  nickname: string;
+  email: string;
+  password: string;
+}

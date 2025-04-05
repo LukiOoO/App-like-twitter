@@ -1,92 +1,103 @@
 "use client";
 
-import "../globals.css";
-import Header from "@/components/header/Header";
-import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
+
+import "../globals.css";
+
+import Header from "@/components/header/Header";
 import PostList from "@/components/post_posts/PostList";
+
+import { getPostsApiUn, getPostCommentsApiUn } from "@/utils/api";
 
 export default function PostsWallUndfiend() {
   const [posts, setPosts] = useState<any[]>([]);
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(true);
+  const [isLoadingPosts, setIsLoadingPosts] = useState<boolean>(false);
+  const [commentsByPost, setCommentsByPost] = useState<{
+    [key: number]: any[];
+  }>({});
+  const [shouldPopUp, setShouldPopUp] = useState(false);
 
-  const getPosts = async (
-    url: string = "http://127.0.0.1:8000/p_w/show_user_posts/"
-  ) => {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const toggleShouldPopUp = () => {
+    setShouldPopUp((prev) => !prev);
+  };
+
+  const getPosts = useCallback(async (url?: string) => {
     try {
-      const response = await axios.get(url);
-
+      setIsLoadingPosts(true);
+      const data = await getPostsApiUn(url);
       setPosts((prevPosts) => {
         const existingPostIds = new Set(prevPosts.map((post) => post.post_id));
-        const newUniquePosts = response.data.results
-          ? response.data.results.filter(
+        const newUniquePosts = data.results
+          ? data.results.filter(
               (post: any) => !existingPostIds.has(post.post_id)
             )
           : [];
-
         return [...prevPosts, ...newUniquePosts];
       });
-
-      setNextPage(response.data.next);
-
-      if (!response.data.next) {
+      setNextPage(data.next);
+      if (!data.next) {
         setHasMore(false);
       }
     } catch (error: any) {
       console.error("Error fetching posts:", error);
       setHasMore(false);
+    } finally {
+      setIsLoadingPosts(false);
     }
-  };
+  }, []);
 
-  const getPostComments = async (post_id: number): Promise<any[]> => {
-    try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/p_w/show_user_posts/${post_id}/comments/`
-      );
-
-      return response.data;
-    } catch (error: any) {
-      console.log(error);
-      return [];
-    }
-  };
-  const [commentsByPost, setCommentsByPost] = useState<{
-    [key: number]: any[];
-  }>({});
+  const getPostComments = useCallback(
+    async (post_id: number): Promise<any[]> => {
+      return await getPostCommentsApiUn(post_id);
+    },
+    []
+  );
 
   useEffect(() => {
-    const fetchComments = async () => {
-      const commentsMap: { [key: number]: any[] } = {};
-
-      await Promise.all(
-        posts.map(async (postObj: any) => {
-          const comments = await getPostComments(postObj.post_id);
-          commentsMap[postObj.post_id] = comments;
-        })
-      );
-      setCommentsByPost(commentsMap);
-    };
     if (posts.length > 0) {
+      const fetchComments = async () => {
+        const commentsMap: { [key: number]: any[] } = {};
+        await Promise.all(
+          posts.map(async (postObj: any) => {
+            const comments = await getPostComments(postObj.post_id);
+            commentsMap[postObj.post_id] = comments;
+          })
+        );
+        setCommentsByPost(commentsMap);
+      };
       fetchComments();
     }
-  }, [posts]);
-  console.log(posts);
+  }, [posts, getPostComments]);
 
   useEffect(() => {
     getPosts();
-  }, []);
+  }, [getPosts]);
 
-  const fetchMorePosts = () => {
-    if (nextPage) {
+  const fetchMorePosts = useCallback(() => {
+    if (nextPage && !isLoadingPosts) {
       getPosts(nextPage);
     }
-  };
-  const [shouldPopUp, setShouldPopUp] = useState(false);
-  const toggleShouldPopUp = () => {
-    setShouldPopUp((prev) => !prev);
-  };
+  }, [nextPage, isLoadingPosts, getPosts]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !isLoadingPosts) {
+        fetchMorePosts();
+      }
+    });
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, isLoadingPosts, fetchMorePosts]);
+
   useEffect(() => {
     if (shouldPopUp) {
       setShouldPopUp(false);
@@ -97,8 +108,8 @@ export default function PostsWallUndfiend() {
     <div>
       <Header registerShouldPopup={shouldPopUp} />
       <Toaster />
-      <div className="flex flex-col sm:flex-row ">
-        <div className="w-full sm:w-4/5 flex h-screen border-x-4 border-lighterDark">
+      <div className="flex flex-col sm:flex-row">
+        <div className="w-full sm:w-4/5 flex h-screen border-x-4 border-gray-900">
           <div className="w-4/5 mx-auto flex justify-center mt-5 sm:mt-5">
             <div
               id="scrollableDiv"
@@ -108,7 +119,7 @@ export default function PostsWallUndfiend() {
               <PostList
                 imageClass="image-item"
                 gifClass="gif-item"
-                videoClass="video-item "
+                videoClass="video-item"
                 posts={posts}
                 fetchMorePosts={fetchMorePosts}
                 hasMore={hasMore}
@@ -119,10 +130,11 @@ export default function PostsWallUndfiend() {
                 onLikedByClick={toggleShouldPopUp}
                 onPostClick={() => {}}
               />
+              <div ref={sentinelRef} className="h-4" />
             </div>
           </div>
         </div>
-        <div className="w-full sm:w-1/5 h-screen text-center border-lighterDark border-r-4">
+        <div className="w-full sm:w-1/5 h-screen text-center border-gray-900 border-r-4">
           <div className="p-4">
             <h2 className="font-semibold mb-2">Search:</h2>
             <div className="relative mb-4">

@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import TagManager from "@/components/post_post/TagManager";
 import MediaUploads, { MediaConfig } from "@/components/common/MediaUploads";
@@ -10,6 +8,7 @@ import FindTags from "@/app/findTagsWindow/findTagsWindow";
 import CreateTag from "@/app/createTagWindow/createTagWindow";
 import Button from "@/components/common/Button";
 import { PostEditFormProps } from "@/types/porps/props";
+import { updatePostAPI } from "@/utils/api";
 
 const PostEditForm: React.FC<PostEditFormProps> = ({
   post,
@@ -43,20 +42,21 @@ const PostEditForm: React.FC<PostEditFormProps> = ({
   const toggleCreateTag = () => setShowCreatedTagPopup((prev) => !prev);
 
   const handleFileChange = (
-    variable: "image" | "video" | "gif",
+    type: "image" | "video" | "gif",
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
     const fileUrl = URL.createObjectURL(selectedFile);
-    setNewFileUrls((prev) => ({ ...prev, [variable]: fileUrl }));
-    setNewPostContent((prev) => ({ ...prev, [variable]: selectedFile }));
+    setNewFileUrls((prev) => ({ ...prev, [type]: fileUrl }));
+    setNewPostContent((prev) => ({ ...prev, [type]: selectedFile }));
   };
 
   const updatePost = async () => {
     const formData = new FormData();
     formData.append("text", newPostContent.text);
     selectedTags.forEach((tag) => formData.append("tags", tag));
+
     if (post.image !== newPostContent.image) {
       newPostContent.image
         ? formData.append("image", newPostContent.image)
@@ -72,22 +72,14 @@ const PostEditForm: React.FC<PostEditFormProps> = ({
         ? formData.append("video", newPostContent.video)
         : formData.append("video", "");
     }
+
     try {
-      await axios.put(
-        `http://127.0.0.1:8000/p_w/user-post-manager/${post.post_id}/`,
-        formData,
-        {
-          headers: {
-            Authorization: `JWT ${Cookies.get("access")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await updatePostAPI(post.post_id, formData);
       toast.success("Post został zaktualizowany");
       refreshPost();
       cancelEdit();
     } catch (error: any) {
-      console.log(error);
+      console.error(error);
       toast.error("Aktualizacja nie powiodła się.");
     }
   };
@@ -167,7 +159,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({
             Submit
           </Button>
           <Button
-            onClick={() => cancelEdit()}
+            onClick={cancelEdit}
             buttonClassName="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all"
             ariaLabel="Cancel"
           >

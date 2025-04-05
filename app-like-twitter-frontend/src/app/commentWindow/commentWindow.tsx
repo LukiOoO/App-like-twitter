@@ -1,13 +1,16 @@
 "use client";
 
-import "../globals.css";
-import React, { useState, useRef } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
+import React, { useState, useRef, ChangeEvent } from "react";
 import { toast } from "react-hot-toast";
+
+import "../globals.css";
+
 import Button from "@/components/common/Button";
 import MediaUploadField from "@/components/common/MediaUploadField";
+
 import { CreateCommentProps } from "@/types/porps/props";
+
+import { createCommentApi } from "@/utils/api";
 
 export default function CreateComment({
   togglePopup,
@@ -44,42 +47,23 @@ export default function CreateComment({
   const createComment = async () => {
     const formData = new FormData();
     formData.append("text", newComment.text);
-
     formData.append("image", newComment.image ? newComment.image : "");
     formData.append("gif", newComment.gif ? newComment.gif : "");
     formData.append("video", newComment.video ? newComment.video : "");
 
     try {
-      await axios.post(
-        `http://127.0.0.1:8000/p_w/show_user_posts/${id}/comments/`,
-        formData,
-        {
-          headers: {
-            Authorization: `JWT ${Cookies.get("access")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await createCommentApi(id, formData);
       await postComments();
       toast.success("The commentary was created");
       setcreateComWinpopup(false);
     } catch (error: any) {
       if (error.response?.data) {
         const errorString = JSON.stringify(error.response.data);
-        console.log(
-          "Error:",
-          errorString.split("[")[1].split(".")[0].replace(/["\]]/g, "").trim()
-        );
-        toast.error(
-          `${errorString
-            .split("[")[0]
-            .split(":")[0]
-            .replace(/["{]/g, "")} - ${errorString
-            .split("[")[1]
-            .split(".")[0]
-            .replace(/["\]]/g, "")
-            .trim()}`
-        );
+        const message =
+          errorString.split("[")[0].split(":")[0].replace(/["{]/g, "") +
+          " - " +
+          errorString.split("[")[1].split(".")[0].replace(/["\]]/g, "").trim();
+        toast.error(message);
       } else {
         toast.error("Something went wrong");
       }
@@ -88,7 +72,7 @@ export default function CreateComment({
 
   const handleFileChange = (
     type: "image" | "video" | "gif",
-    event: React.ChangeEvent<HTMLInputElement>
+    event: ChangeEvent<HTMLInputElement>
   ) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
