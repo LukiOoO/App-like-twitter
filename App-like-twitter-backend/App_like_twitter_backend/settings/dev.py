@@ -9,7 +9,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME':  'app_l_tt',
-        'HOST': 'localhost',  # mysql nazwa usługi w docker-compose 
+        'HOST': 'mysql',  # mysql nazwa usługi w docker-compose
         'USER': 'root',
         'PASSWORD': 'P@ssword',
     }
