@@ -1,3 +1,4 @@
+from rest_framework.permissions import AllowAny
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
@@ -11,7 +12,7 @@ from .models import User
 from posts_wall.models import Post
 from posts_wall.serializers import ShowUserPostsSerializer
 from .models import User
-from .serializers import UserSerializer, ResetPasswordSerializer, FollowersSerializer, UnfollowUserSerializer, YouAreFollowing, FollowUserSerializer, SearchUserProfileSerializer,UserAvatarSerializer,UserCommentsSerializer
+from .serializers import UserSerializer, ResetPasswordConfirmSerializer, FollowersSerializer, SearchUserEmailerializer, UnfollowUserSerializer, YouAreFollowing, FollowUserSerializer, SearchUserProfileSerializer, UserAvatarSerializer, UserCommentsSerializer
 from .permissions import IsProfileOwner, FreezeAccountPermission
 from comments.models import Comments
 
@@ -64,8 +65,6 @@ class FollowAndUnFollowUserView(viewsets.GenericViewSet):
         raise NotImplementedError
 
 
-
-
 class FollowersAndFollowingBaseView(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated,
                           IsProfileOwner, FreezeAccountPermission]
@@ -112,9 +111,11 @@ class MyUserViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, Gene
         except Exception as e:
             return Response(str(e), status=status.HTTP_403_FORBIDDEN)
 
+
 class UpdateAvatarView(APIView):
     permission_classes = [IsAuthenticated,
                           IsProfileOwner, FreezeAccountPermission]
+
     def put(self, request, *args, **kwargs):
         user = request.user
         serializer = UserAvatarSerializer(user, data=request.data)
@@ -124,25 +125,18 @@ class UpdateAvatarView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ResetPassword(APIView):
-    serializer_class = ResetPasswordSerializer
-    permission_classes = [IsProfileOwner, IsAuthenticated]
+class ResetPasswordConfirmView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
 
-    def post(self, request,  uid, token):
-
-        try:
-            current_password = request.data.get('current_password')
-            new_password = request.data.get('new_password')
-            user = request.user
-            if not user.check_password(current_password):
-                return Response("Invalid current password.", status=status.HTTP_400_BAD_REQUEST)
-            elif len(current_password) == 0 or len(new_password) == 0:
-                return Response('The field must be filled in', status=status.HTTP_400_BAD_REQUEST)
-            user.set_password(new_password)
-            user.save()
-            return Response("Password changed successfully.", status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response(str(e), status=status.HTTP_403_FORBIDDEN)
+    def post(self, request, uid, token):
+        serializer = ResetPasswordConfirmSerializer(
+            data=request.data,
+            context={'uid': uid, 'token': token}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'detail': 'Password reset successful.'}, status=200)
 
 
 class YourFollowersView(FollowersAndFollowingBaseView):
@@ -228,6 +222,26 @@ class SearchUserProfile(viewsets.GenericViewSet):
             return Response(str(e), status=status.HTTP_403_FORBIDDEN)
 
 
+class SearchUserEmail(viewsets.GenericViewSet):
+    serializer_class = SearchUserEmailerializer
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        user_id = request.query_params.get('id')
+        try:
+            if user_id:
+                user = self.queryset.filter(pk=user_id).first()
+                if user:
+                    serializer = self.get_serializer(user)
+                    return Response(serializer.data)
+                else:
+                    return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'User name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_403_FORBIDDEN)
+
+
 class UserPosts(viewsets.GenericViewSet):
     queryset = Post.objects.all()
     serializer_class = ShowUserPostsSerializer
@@ -264,6 +278,3 @@ class AllUserComments(viewsets.ModelViewSet):
             return Response({'Your comments': serializer.data})
         except Exception as e:
             return Response(str(e), status=status.HTTP_403_FORBIDDEN)
-
-
-

@@ -26,6 +26,9 @@ import {
   getUserCommentsApi,
   sendResetPasswordEmailApi,
   updateUserAvatarApi,
+  searchUserEmailApi,
+  resendActivationApi,
+  updateFreezeStatusApi,
 } from "@/utils/api";
 
 export default function ProfilePage() {
@@ -195,7 +198,27 @@ export default function ProfilePage() {
   const onUsernameClick = (nickname?: string): void => {
     moveToUserProfile(router, nickname);
   };
+  const freezeAccount = async () => {
+    try {
+      await updateFreezeStatusApi(true);
+      toast.success("Konto zostało zamrożone");
+      await fetchUserData();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
 
+  const unFreezeAccount = async () => {
+    try {
+      const userEmail = await searchUserEmailApi(userData.nickname);
+      await resendActivationApi(userEmail);
+      toast.success("Link aktywacyjny został wysłany na Twój e-mail");
+      await updateFreezeStatusApi(false);
+      await fetchUserData();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
   return (
     <div className="min-h-screen bg-black text-white">
       <Header registerShouldPopup={false} />
@@ -217,8 +240,8 @@ export default function ProfilePage() {
                 handleFileChange={handleFileChange}
                 changeUserData={changeUserData}
                 sendResetPasswordEmail={sendResetPasswordEmail}
-                freezeAccount={() => {}}
-                unFreezeAccount={() => {}}
+                freezeAccount={freezeAccount}
+                unFreezeAccount={unFreezeAccount}
                 email={email}
               />
             </div>

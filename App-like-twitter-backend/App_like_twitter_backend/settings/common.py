@@ -30,6 +30,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',
 ]
 
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
@@ -122,6 +123,7 @@ SIMPLE_JWT = {
     # "BLACKLIST_AFTER_ROTATION": True,
 
 }
+FRONTEND_URL = "http://localhost:3000"
 
 DJOSER = {
 
@@ -137,6 +139,7 @@ DJOSER = {
         'current_user': 'users.serializers.UserSerializer',
         'resend_activation': 'sending.serializers.ResendActivationSerializer',
         'token_create': 'sending.serializers.CustomTokenCreateSerializer',
+
 
     },
 

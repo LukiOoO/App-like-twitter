@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "react-hot-toast";
 import Cookies from "js-cookie";
 
@@ -73,16 +74,24 @@ const Login: React.FC<PopupProps> = ({ togglePopup }) => {
         value={userData.password}
         onChange={(e) => setUserData({ ...userData, password: e.target.value })}
       />
+
+      <div className="mt-2 text-center">
+        <Link href="/reset-password" className="text-blue-500 hover:underline">
+          Forgot your password?
+        </Link>
+      </div>
+
       {activeBtn ? (
         <Button
           onClick={loginUser}
-          buttonClassName="bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition duration-300"
+          buttonClassName="bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition duration-300 mt-4"
         >
           Login
-        </Button>
+        </Button> 
       ) : (
-        <span>Please type data</span>
+        <span className="mt-4 block text-center text-gray-500">Please type data</span>
       )}
+
       <Button
         onClick={togglePopup}
         buttonClassName="absolute top-2 right-2 bg-black text-white py-1 px-2 rounded"

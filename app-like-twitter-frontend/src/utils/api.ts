@@ -286,3 +286,58 @@ export async function updatePostAPI(
   );
   return response.data;
 }
+
+
+
+export async function updateFreezeStatusApi(freezeOrNot: boolean) {
+  const token = Cookies.get("access_token");
+  const res = await fetch(`${BASE_URL}/users/me/`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `JWT ${token}`,
+    },
+    body: JSON.stringify({ freeze_or_not: freezeOrNot }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to update freeze status");
+  }
+  return res.json();
+}
+
+export async function searchUserEmailApi(nickname: string): Promise<string> {
+  const token = Cookies.get("access_token");
+  const res = await fetch(
+    `${BASE_URL}/search-user-email/?id=${encodeURIComponent(
+      nickname
+    )}`,
+    {
+      method: "GET",
+      headers: {
+        "Authorization": `JWT ${token}`,
+      },
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to fetch user email");
+  }
+  const data = await res.json();
+  return data.email;
+}
+
+export async function resendActivationApi(email: string) {
+  const res = await fetch(`${BASE_URL}/users/resend_activation/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to resend activation email");
+  }
+  return res.json();
+}

@@ -4,6 +4,13 @@ from .models import User
 from sending.views import send_activation_email
 from django.conf import settings
 from comments.models import Comments
+from django.utils.encoding import force_str, DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class UserCreateSerializer(BaseUserCreateSerializer):
@@ -15,6 +22,7 @@ class UserCreateSerializer(BaseUserCreateSerializer):
         send_activation_email(user.id)
         return user
 
+
 class UserAvatarSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -25,25 +33,47 @@ class UserSerializer(BaseUserSerializer):
     avatar = serializers.SerializerMethodField()
 
     def get_avatar(self, obj):
-        if obj.avatar:  
+        if obj.avatar:
             return f"{settings.BASE_URL}{obj.avatar.url}"
-        return None  
-    
+        return None
+
     class Meta(BaseUserSerializer.Meta):
         model = User
-        fields = ['nickname', 'email', 'avatar', 'freeze_or_not','id']
-        read_only_fields = [ 'slug', 'is_active',]
+        fields = ['nickname', 'email', 'avatar', 'freeze_or_not', 'id']
+        read_only_fields = ['slug', 'is_active',]
 
 
-class ResetPasswordSerializer(serializers.Serializer):
-    current_password = serializers.CharField(
-        max_length=128, write_only=True, style={'input_type': 'password'})
-    new_password = serializers.CharField(
-        max_length=128, write_only=True, style={'input_type': 'password'})
+class ResetPasswordConfirmSerializer(serializers.Serializer):
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
 
-    class Meta:
-        model = User
-        fields = ['current_password', 'new_password']
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({
+                'confirm_password': 'Passwords do not match.'
+            })
+
+        uid = self.context['uid']
+        token = self.context['token']
+
+        try:
+            uid_decoded = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=uid_decoded)
+        except (DjangoUnicodeDecodeError, User.DoesNotExist):
+            raise serializers.ValidationError({'uid': 'Invalid UID.'})
+
+        if not default_token_generator.check_token(user, token):
+            raise serializers.ValidationError(
+                {'token': 'Invalid or expired token.'})
+
+        attrs['user'] = user
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.validated_data['user']
+        user.set_password(self.validated_data['new_password'])
+        user.save()
+        return user
 
 
 class FollowersSerializer(serializers.ModelSerializer):
@@ -104,6 +134,16 @@ class SearchUserProfileSerializer(serializers.ModelSerializer):
             'is_active', 'freeze_or_not', 'user_followers', 'following', 'last_login'
         ]
 
+
+class SearchUserEmailerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = [
+            'email'
+        ]
+
+
 class UserCommentsSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
@@ -121,4 +161,3 @@ class UserCommentsSerializer(serializers.ModelSerializer):
         model = Comments
         fields = ['id', 'user', 'text', 'post_id',
                   'image', 'video', 'gif', 'created_at']
-

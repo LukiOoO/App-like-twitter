@@ -90,8 +90,8 @@ const UserInfo: React.FC<UserInfoProps> = ({
             <span>Freeze Account</span>
             <Checkbox
               color="default"
-              isSelected={userData.freeze_or_not}
-              onChange={() => freezeAccount(!userData.freeze_or_not)}
+              defaultSelected={userData.freeze_or_not}
+              onChange={(e) => freezeAccount((e.target as HTMLInputElement).checked)}
             />
           </p>
           <p className="p-5 flex">

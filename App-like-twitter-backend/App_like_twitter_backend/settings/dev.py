@@ -9,7 +9,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME':  'app_l_tt',
-        'HOST': 'mysql',  # mysql nazwa usługi w docker-compose
+        'HOST': 'localhost',  # mysql nazwa usługi w docker-compose
         'USER': 'root',
         'PASSWORD': 'P@ssword',
     }
@@ -29,10 +29,10 @@ CACHES = {
 }
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp4dev'
+EMAIL_HOST = 'localhost'
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
-EMAIL_PORT = 25
+EMAIL_PORT = 2525
 DEFAULT_FROM_EMAIL = 'appLtt@site.com'
 
 

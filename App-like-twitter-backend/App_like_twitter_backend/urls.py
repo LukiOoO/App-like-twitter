@@ -18,10 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from sending.views import PasswordResetRequestView
 
 admin.site.site_header = 'App like twitter  Admin'
 admin.site.index_title = 'Admin'
-
 
 
 urlpatterns = [
@@ -33,6 +33,8 @@ urlpatterns = [
     path('a_f_g_P_u/', include('app_for_getting_photo_url.urls')),
     path('s/', include('sending.urls')),
     path('u/', include('users.urls')),
+    path('u/users/reset_password/', PasswordResetRequestView.as_view(),
+         name='inline-reset-password'),
     path('u/', include('djoser.urls')),
     path('u/', include('djoser.urls.jwt')),
 
