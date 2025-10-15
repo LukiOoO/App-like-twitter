@@ -14,6 +14,7 @@ from .permissions import IsProfileOwnerPostMg
 
 logging.getLogger(__name__)
 
+
 class PostDetails(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ShowUserPostsSerializer
@@ -141,10 +142,12 @@ class ShowUserPosts(viewsets.GenericViewSet):
         popular_posts_size = max(int(post_count * 0.4), 1)
         random_posts_size = max(int(post_count * 0.2), 1)
 
-        latest_posts_qs = self.get_queryset().all().order_by('-created_at')[:latest_posts_size]
+        latest_posts_qs = self.get_queryset().all().order_by(
+            '-created_at')[:latest_posts_size]
         latest_posts = list(latest_posts_qs)
 
-        popular_posts_qs = self.get_queryset().annotate(num_likes=Count('like')).order_by('-num_likes')[:popular_posts_size]
+        popular_posts_qs = self.get_queryset().annotate(
+            num_likes=Count('like')).order_by('-num_likes')[:popular_posts_size]
         popular_posts = list(popular_posts_qs)
 
         excluded_ids = set(post.id for post in latest_posts + popular_posts)
@@ -157,10 +160,12 @@ class ShowUserPosts(viewsets.GenericViewSet):
         else:
             random_posts = remaining_posts.copy()
             needed = random_posts_size - len(random_posts)
-            additional_posts_qs = self.get_queryset().exclude(id__in=excluded_ids | set(post.id for post in random_posts))
+            additional_posts_qs = self.get_queryset().exclude(
+                id__in=excluded_ids | set(post.id for post in random_posts))
             additional_posts = list(additional_posts_qs)
             if additional_posts:
-                additional_sample = sample(additional_posts, min(needed, len(additional_posts)))
+                additional_sample = sample(
+                    additional_posts, min(needed, len(additional_posts)))
                 random_posts.extend(additional_sample)
 
         combined_posts = latest_posts + popular_posts + random_posts
@@ -171,7 +176,7 @@ class ShowUserPosts(viewsets.GenericViewSet):
             if post.id not in seen_ids:
                 unique_posts.append(post)
                 seen_ids.add(post.id)
-                
+
         unique_posts = list(reversed(unique_posts))
 
         paginated_posts = self.paginate_queryset(unique_posts)
@@ -192,11 +197,14 @@ class ShowUserPosts(viewsets.GenericViewSet):
         random_posts_size = max(int(post_count * 0.1), 1)
         latest_posts_size = max(int(post_count * 0.1), 1)
 
-        liked_posts_ids = Like.objects.filter(user=request.user).values_list('posts', flat=True)
+        liked_posts_ids = Like.objects.filter(
+            user=request.user).values_list('posts', flat=True)
 
-        liked_tags = Tags.objects.filter(post__in=liked_posts_ids).values_list('tag', flat=True)
+        liked_tags = Tags.objects.filter(
+            post__in=liked_posts_ids).values_list('tag', flat=True)
 
-        similar_posts_qs = Post.objects.filter(tags__tag__in=liked_tags).exclude(user=request.user).exclude(id__in=liked_posts_ids)
+        similar_posts_qs = Post.objects.filter(tags__tag__in=liked_tags).exclude(
+            user=request.user).exclude(id__in=liked_posts_ids)
         similar_posts = list(similar_posts_qs)
 
         if len(similar_posts) >= follow_tags_size:
@@ -204,13 +212,15 @@ class ShowUserPosts(viewsets.GenericViewSet):
         else:
             sampled_similar_posts = similar_posts.copy()
             needed = follow_tags_size - len(sampled_similar_posts)
-            excluded_ids = set(liked_posts_ids) | {post.id for post in sampled_similar_posts}
+            excluded_ids = set(liked_posts_ids) | {
+                post.id for post in sampled_similar_posts}
             additional_similar_qs = Post.objects.filter(tags__tag__in=liked_tags)\
                 .exclude(user=request.user)\
                 .exclude(id__in=list(excluded_ids))
             additional_similar_posts = list(additional_similar_qs)
             if additional_similar_posts:
-                additional_sample = sample(additional_similar_posts, min(needed, len(additional_similar_posts)))
+                additional_sample = sample(additional_similar_posts, min(
+                    needed, len(additional_similar_posts)))
                 sampled_similar_posts.extend(additional_sample)
 
         following_users = request.user.following.all()
@@ -219,22 +229,28 @@ class ShowUserPosts(viewsets.GenericViewSet):
         followed_user_posts = list(followed_user_posts_qs)
 
         if len(followed_user_posts) >= follow_users_posts_size:
-            sampled_followed_posts = sample(followed_user_posts, follow_users_posts_size)
+            sampled_followed_posts = sample(
+                followed_user_posts, follow_users_posts_size)
         else:
             sampled_followed_posts = followed_user_posts.copy()
             needed = follow_users_posts_size - len(sampled_followed_posts)
-            additional_followed_qs = Post.objects.filter(user__in=following_users).exclude(id__in=set(post.id for post in sampled_followed_posts))
+            additional_followed_qs = Post.objects.filter(user__in=following_users).exclude(
+                id__in=set(post.id for post in sampled_followed_posts))
             additional_followed_posts = list(additional_followed_qs)
             if additional_followed_posts:
-                additional_sample = sample(additional_followed_posts, min(needed, len(additional_followed_posts)))
+                additional_sample = sample(additional_followed_posts, min(
+                    needed, len(additional_followed_posts)))
                 sampled_followed_posts.extend(additional_sample)
 
-        latest_posts_qs = self.get_queryset().all().order_by('-created_at')[:latest_posts_size]
+        latest_posts_qs = self.get_queryset().all().order_by(
+            '-created_at')[:latest_posts_size]
         latest_posts = list(latest_posts_qs)
 
-        excluded_ids = set(post.id for post in sampled_similar_posts + sampled_followed_posts + latest_posts)
+        excluded_ids = set(post.id for post in sampled_similar_posts +
+                           sampled_followed_posts + latest_posts)
 
-        remaining_posts_qs = self.get_queryset().exclude(id__in=excluded_ids).exclude(user=request.user)
+        remaining_posts_qs = self.get_queryset().exclude(
+            id__in=excluded_ids).exclude(user=request.user)
         remaining_posts = list(remaining_posts_qs)
 
         if len(remaining_posts) >= random_posts_size:
@@ -242,13 +258,16 @@ class ShowUserPosts(viewsets.GenericViewSet):
         else:
             random_posts = remaining_posts.copy()
             needed = random_posts_size - len(random_posts)
-            additional_random_qs = self.get_queryset().exclude(id__in=excluded_ids | set(post.id for post in random_posts))
+            additional_random_qs = self.get_queryset().exclude(
+                id__in=excluded_ids | set(post.id for post in random_posts))
             additional_random_posts = list(additional_random_qs)
             if additional_random_posts:
-                additional_sample = sample(additional_random_posts, min(needed, len(additional_random_posts)))
+                additional_sample = sample(additional_random_posts, min(
+                    needed, len(additional_random_posts)))
                 random_posts.extend(additional_sample)
 
-        combined_posts = sampled_similar_posts + sampled_followed_posts + random_posts + latest_posts
+        combined_posts = sampled_similar_posts + \
+            sampled_followed_posts + random_posts + latest_posts
 
         unique_posts = []
         seen_ids = set()
@@ -256,9 +275,9 @@ class ShowUserPosts(viewsets.GenericViewSet):
             if post.id not in seen_ids:
                 unique_posts.append(post)
                 seen_ids.add(post.id)
-                
+
         unique_posts = list(reversed(unique_posts))
-                
+
         paginated_posts = self.paginate_queryset(unique_posts)
         if paginated_posts is not None:
             serializer = self.get_serializer(paginated_posts, many=True)
@@ -274,7 +293,8 @@ class ShowUserPosts(viewsets.GenericViewSet):
                 post = Post.objects.get(id=follow_post_id)
             except Post.DoesNotExist:
                 return Response({'error': 'Invalid post ID'}, status=status.HTTP_400_BAD_REQUEST)
-            like_exist = Like.objects.filter(posts=post, user=request.user).exists()
+            like_exist = Like.objects.filter(
+                posts=post, user=request.user).exists()
             if like_exist:
                 Like.objects.filter(posts=post, user=request.user).delete()
                 return Response({'detail': "Unfollowed post successfuly"}, status=status.HTTP_200_OK)
@@ -282,4 +302,3 @@ class ShowUserPosts(viewsets.GenericViewSet):
             return Response({'detail': "Follow post successfuly"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(str(e), status=status.HTTP_403_FORBIDDEN)
-
